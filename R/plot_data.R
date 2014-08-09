@@ -1,15 +1,5 @@
-#' @import plyr
-#' @import flowCore
-#' @import ggplot2
-#' @import reshape
-#' @import igraph
-
 options(stringsAsFactors = F)
-#library(plyr)
-#library(flowCore)
-#library(ggplot2)
-#library(reshape)
-#library(igraph)
+
 
 plot_cluster <- function(data, cluster, graph.name, col.names)
 {

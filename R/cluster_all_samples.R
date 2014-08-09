@@ -1,10 +1,4 @@
-#' @import cluster
-
-#library(cluster)
 options(stringsAsFactors = F)
-
-rm(list = ls())
-
 
 
 process_file <- function(f, wd, col.names, num_clusters, num_samples)

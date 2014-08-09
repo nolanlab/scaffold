@@ -1,19 +1,5 @@
-#' @import plyr
-#' @import flowCore
-#' @import igraph
-#' @import cluster
-
-#library(plyr)
-#library(flowCore)
-#library(igraph)
-#library(cluster)
-
-
 options(stringsAsFactors = F)
 options(warn = 1)
-
-
-#source("scaffold/forceatlas2Cpp.R")
 
 
 get_celltype_medians <- function(tab)

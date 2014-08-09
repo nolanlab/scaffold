@@ -1,5 +1,4 @@
-#' @import igraph
-#' @import flowCore
+
 
 my_load <- function(f_name)
 {

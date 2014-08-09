@@ -1,6 +1,3 @@
-#' @import shiny
-
-
 #' @export
 scaffold.run <- function()
 {

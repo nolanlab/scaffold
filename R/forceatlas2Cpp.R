@@ -1,12 +1,3 @@
-#' @import igraph
-#' @import Rcpp
-
-#library(igraph)
-#library(Rcpp)
-
-
-#sourceCpp("scaffold/forceatlas2.cpp", rebuild = T)
-
 options(stringsAsFactors = F)
 
 layout.forceatlas2 <- function(G, ew_influence = 1, kgrav = 1, iter = 1000, prevent.overlap = FALSE, fixed = rep(FALSE, vcount(G)), stopping_tolerance = 0.001, barnes_hut = FALSE)
