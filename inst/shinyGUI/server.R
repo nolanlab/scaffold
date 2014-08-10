@@ -40,7 +40,8 @@ fluidPage(
             selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
             selectInput("graphui_marker", "Nodes color:", choices = c("")),
             selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local")),
-            selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default")), br(),
+            selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default")),
+            selectInput("graphui_display_edges", "Display edges:", choices = c("All", "Highest scoring only")), br(),
             actionButton("graphui_reset_graph_position", "Reset graph position"), br(),
             actionButton("graphui_toggle_landmark_labels", "Toggle landmark labels"), br(),
             actionButton("graphui_toggle_cluster_labels", "Toggle cluster labels"), br(),
@@ -372,6 +373,11 @@ shinyServer(function(input, output, session)
             display <- ifelse(input$graphui_toggle_landmark_labels %% 2 == 0, "", "none")
             session$sendCustomMessage(type = "toggle_label", list(target = "landmark", display = display))
         }
+    })
+    
+    observe({
+            display_edges <- input$graphui_display_edges
+            session$sendCustomMessage(type = "toggle_display_edges", display_edges)
     })
     
     observe({

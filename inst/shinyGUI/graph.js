@@ -109,7 +109,14 @@ $.extend(networkOutputBinding, {
                     .attr("y1", function(d) { return d.y1; })
                     .attr("x2", function(d) { return d.x2; })
                     .attr("y2", function(d) { return d.y2; })
-                    .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+                    .style("stroke-width", function(d) { return Math.sqrt(d.value); })
+                    .style("display", function(d) {
+                          var displ_edges = $('[id=graphui_display_edges]').val();
+                          if(displ_edges == "All")
+                            return("");
+                          else
+                            return(d.is_highest_scoring == "1" ? "" : "none");
+                          });
          
             var node = vis.selectAll("circle.node")
                 .data(nodes)
@@ -185,6 +192,17 @@ Shiny.addCustomMessageHandler("toggle_label",
     {
         var target = value.target == "cluster" ? ".label-cluster" : ".label-landmark";
         d3.selectAll(target).style("display", value.display);
+    }
+);
+
+
+Shiny.addCustomMessageHandler("toggle_display_edges",
+    function(value)
+    {
+        if(value == "All")
+            d3.selectAll(".link").style("display", "");
+        else
+            d3.selectAll(".link").style("display", function(d) {return(d.is_highest_scoring == 1 ? "" : "none")})
     }
 );
 
