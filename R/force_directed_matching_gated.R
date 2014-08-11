@@ -50,11 +50,11 @@ downsample_by <- function(tab, col.name, size)
 
 load_attractors_from_gated_data <- function(dir)
 {
-    files <- list.files(dir, ".fcs")
+  files <- list.files(dir, ".fcs")
 	res <- NULL
 	for(f in files)
 	{
-        population <- tail(strsplit(f, "_")[[1]], n = 1)
+    population <- tail(strsplit(f, "_")[[1]], n = 1)
 		fcs <- read.FCS(paste(dir, f, sep = "/"))
 		tab <- convert_fcs(fcs)
         
@@ -62,25 +62,23 @@ load_attractors_from_gated_data <- function(dir)
             colnames(tab) <- pData(parameters(fcs))$desc
         else
             colnames(tab) <- pData(parameters(fcs))$name
-        #colnames(tab) <- gsub("-", ".", colnames(tab))
         tab <- as.matrix(tab)
         tab[tab < 0] <- 0
         tab <- as.data.frame(tab)
         
-		tab <- cbind(tab, population)
+		tab <- cbind(tab, population, stringsAsFactors = F)
 		res <- rbind(res, tab)
 	}
     
-    downsampled.data <- downsample_by(res, "population", 1000)
-    names(downsampled.data) <- gsub("population", "cellType", names(downsampled.data))
+  downsampled.data <- downsample_by(res, "population", 1000)
+  names(downsampled.data) <- gsub("population", "cellType", names(downsampled.data))
     
     #Change cellType to be numbers
 	k <- unique(res$population)
-	k <- data.frame(population = k, cellType = seq_along(k))
+	k <- data.frame(population = k, cellType = seq_along(k), stringsAsFactors = F)
 	res <- merge(res, k)
 	res <- res[, grep("population", names(res), invert = T)]
-    res <- ddply(res, ~cellType, colwise(median))
-    
+  res <- ddply(res, ~cellType, colwise(median))
 	return(list(downsampled.data = downsampled.data, tab.attractors = res, cellType_key = k))
 }
 
@@ -211,7 +209,6 @@ run_analysis_gated <- function(working.dir, ref.file, col.names, ...)
     files.list <- paste(working.dir, files.list, sep = "/")
     ref.dir <- paste(working.dir, "gated/", sep = "/")
     gated_data <- load_attractors_from_gated_data(ref.dir)
-    
     tab.attractors <- gated_data$tab.attractors
     att.labels <- gated_data$cellType_key$population
     G.attractors <- NULL
@@ -325,11 +322,11 @@ TRASH <- function()
             tab[tab < 0] <- 0
             tab <- as.data.frame(tab)
             
-            tab <- cbind(tab, population)
+            tab <- cbind(tab, population, stringsAsFactors = FALSE)
             res <- rbind(res, tab)
         }
         k <- unique(res$population)
-        k <- data.frame(population = k, cellType = seq_along(k))
+        k <- data.frame(population = k, cellType = seq_along(k), stringsAsFactors = FALSE)
         res <- merge(res, k)
         cat(k$population, file = paste(dir, "key.txt", sep = "/"), sep = "\n")
         res <- res[, grep("population", names(res), invert = T)]

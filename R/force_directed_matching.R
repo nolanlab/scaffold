@@ -157,11 +157,11 @@ get_vertex_table <- function(G)
 	
 	for(a in att)
 	{
-		d <- data.frame(get.vertex.attribute(G, a))
+		d <- data.frame(get.vertex.attribute(G, a), stringsAsFactors = FALSE)
 		if(is.null(ret))
             ret <- d
 		else
-            ret <- cbind(ret, d)
+            ret <- cbind(ret, d, stringsAsFactors = FALSE)
 	}
 	names(ret) <- att
 	return(ret)
@@ -207,7 +207,7 @@ cluster_data <- function(tab, col.names, k = 200, algorithm = "", ...)
 	}
 	
     print("Clustering done")
-	tab <- cbind(tab, groups)
+	tab <- cbind(tab, groups, stringsAsFactors = FALSE)
 	return(tab)
 }
 
@@ -228,13 +228,13 @@ add_inter_clusters_connections <- function(G, col.names)
 		v <- v[v > 0]
 		if(length(v) > 0)
 		{
-			e.list <- rbind(e.list, data.frame(a = tab[i, "name"], b = names(v), weight = v))
+			e.list <- rbind(e.list, data.frame(a = tab[i, "name"], b = names(v), weight = v, stringsAsFactors = FALSE))
 			
 		}
 	}
     temp <- as.matrix(e.list[, c("a", "b")])
     temp <- t(apply(temp, 1, sort))
-    e.list <- data.frame(temp, weight = e.list$weight)
+    e.list <- data.frame(temp, weight = e.list$weight, stringsAsFactors = FALSE)
     names(e.list)[1:2] <- c("a", "b")
     e.list <- e.list[!duplicated(e.list[, c("a", "b")]),]
     e.list.igraph <- c(t(as.matrix(e.list[, c("a", "b")])))

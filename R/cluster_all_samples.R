@@ -77,11 +77,11 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples)
     
     pop.size <- ddply(m, ~cellType, nrow)
     
-    temp <- data.frame(tab.medians, sample = f, popsize = pop.size[tab.medians$cellType, "V1"], check.names = F)
+    temp <- data.frame(tab.medians, sample = f, popsize = pop.size[tab.medians$cellType, "V1"], check.names = F, stringsAsFactors = FALSE)
     
     colnames(temp) <- gsub("^X", "", colnames(temp))
     m <- data.frame(m)
-    orig.data <- data.frame(orig.data)
+    orig.data <- data.frame(orig.data, stringsAsFactors = FALSE, check.names = FALSE)
     colnames(orig.data) <- gsub("^X", "", colnames(orig.data))
     colnames(m) <- gsub("^X", "", colnames(m))
     
