@@ -126,24 +126,6 @@ get_attractors_from_graph_clustering <- function(f_name, col.names)
     
 }
 
-#This won't work if the different files have different markers
-get_dataset_statistics_old <- function(dataset)
-{
-    graphs <- dataset$graphs
-    temp <- NULL
-    for(G in graphs)
-    {
-        V(G)$popsize.relative <- V(G)$popsize / sum(V(G)$popsize, na.rm = T)
-        tab <- get_vertex_table(G)
-        temp <- rbind(temp, tab)
-    }
-    max.vals <-  sapply(temp, function(x) {if(is.numeric(x)) return(max(x, na.rm  =T))})
-    return(list(max.marker.vals = max.vals))
-    
-}
-
-
-
 
 get_dataset_statistics <- function(dataset)
 {
@@ -168,24 +150,45 @@ get_dataset_statistics <- function(dataset)
 
 
 
+add_missing_columns <- function(m, col.names, col.names.all)
+{
+  v <- col.names.all[!(col.names.all %in% col.names)]
+  print(sprintf("Adding missing columns: %s", paste(v, collapse = ", ")))
+  ret <- matrix(nrow = nrow(m), ncol = length(v), data = 0)
+  colnames(ret) <- v
+  ret <- data.frame(m, ret, check.names = F)
+  return(ret)
+}
 
-process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, ...)
+
+#ref.scaffold.markers are the scaffold markers of the reference file when we are in "Existing" mode
+process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode, ref.scaffold.markers = NULL, ...)
 {
     ret <- list(graphs = list(), clustered.data = list())
     
     for(f in files.list)
     {
-        print(tab.attractors[1:5,])
         print(paste("Processing", f, sep = " "))
         tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F)
         tab <- tab[!apply(tab[, col.names], 1, function(x) {all(x == 0)}),]
         #tab <- filter_small_populations(tab)
+        if(scaffold.mode == "existing")
+        {
+          if(length(col.names) < length(ref.scaffold.markers))
+            tab <- add_missing_columns(tab, col.names, ref.scaffold.markers)
+          col.names.final <- ref.scaffold.markers
+        }
+        else
+        {
+          col.names.final <- col.names
+        }
+        
         
         names(tab) <- gsub("cellType", "groups", names(tab))
         names(tab) <- gsub("^X", "", names(tab))
         ew_influence <- ceiling(length(col.names) / 3)
         res <- process_data(tab, G.attractors, tab.attractors,
-            col.names = col.names, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, ...)
+            col.names = col.names.final, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, ...)
         G.complete <- get_highest_scoring_edges(res$G.complete)
         clustered.data <- my_load(gsub("txt$", "all_events.RData", f))
         clustered.data <- downsample_by(clustered.data, "cellType", 1000)
@@ -212,7 +215,7 @@ run_analysis_gated <- function(working.dir, ref.file, col.names, ...)
     tab.attractors <- gated_data$tab.attractors
     att.labels <- gated_data$cellType_key$population
     G.attractors <- NULL
-    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, ...)
+    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode = "gated", ...)
     ret <- c(list(scaffold.col.names = col.names, landmarks.data = gated_data$downsampled.data), ret)
     my_save(ret, paste(working.dir, sprintf("%s.scaffold", ref.file), sep = "/"))
     return(files.list)
@@ -232,7 +235,7 @@ run_analysis_unsupervised <- function(working.dir, ref.file, col.names, ...)
     tab.attractors <- temp$tab.attractors
     att.labels <- temp$att.labels
     G.attractors <- NULL
-    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, ...)
+    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode = "unsuperivsed", ...)
     ret <- c(list(scaffold.col.names = col.names), ret)
     my_save(ret, paste(working.dir, sprintf("%s.scaffold", ref.file), sep = "/"))
     return(files.list)
@@ -242,10 +245,9 @@ run_analysis_unsupervised <- function(working.dir, ref.file, col.names, ...)
 
 
 
-load_existing_layout <- function(f_name)
+load_existing_layout <- function(scaffold.data)
 {
-	ref.data <- my_load(f_name)
-    G <- ref.data$graphs[[1]]
+  G <- scaffold.data$graphs[[1]]
 	G <- induced.subgraph(G, V(G)$type == 1, impl = "copy_and_delete")
 	tab <- get_vertex_table(G)
 	V(G)$name <- 1:vcount(G)
@@ -254,171 +256,27 @@ load_existing_layout <- function(f_name)
 
 
 
-run_analysis_existing <- function(working.dir, ref.file, col.names, ...)
+run_analysis_existing <- function(working.dir, ref.scaffold.file, col.names, ...)
 {
     files.list <- list.files(path = working.dir, pattern = "*.clustered.txt$")
     print(sprintf("Markers used for SCAFFoLD: %s", paste(col.names, collapse = ", ")))
-    print(paste("Using as reference", ref.file, sep = " "))
+    print(paste("Using as reference", ref.scaffold.file, sep = " "))
     files.list <- paste(working.dir, files.list, sep = "/")
-    ref.file <- paste(working.dir, ref.file, sep = "/")
+    ref.scaffold.file <- paste(working.dir, ref.scaffold.file, sep = "/")
+    ref.scaffold.data <- my_load(ref.scaffold.file)
+    ref.scaffold.markers <- ref.scaffold.data$scaffold.col.names
     
-    l <- load_existing_layout(ref.file)
+    
+    l <- load_existing_layout(ref.scaffold.data)
     tab.attractors <- l$tab.attractors
     G.attractors <- l$G.attractors
     att.labels <- V(G.attractors)$Label
     
-    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, ...)
+    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode = "existing", ref.scaffold.markers = ref.scaffold.markers, ...)
     ret <- c(list(scaffold.col.names = col.names), ret)
     my_save(ret, paste(working.dir, sprintf("%s.scaffold", basename(files.list[[1]])), sep = "/"))
     return(files.list)
 }
 
     
-
-
-
-######################################################################################################################################
-
-
-TRASH <- function()
-{
-    
-    load_attractors <- function(dir)
-    {
-        f <- paste(dir, "celltype_medians.txt", sep = "/")
-        #if(file.exists(f))
-        #{
-        #    tab <- read.table(f, header = T, sep = "\t", check.names = F)
-        #    names(tab) <- gsub("^X", "", names(tab))
-        #    return(tab)
-        #}
-        #else
-        {
-            tab <- load_fcs_files(ref.dir)
-            tab.attractors <- ddply(tab, ~cellType, colwise(median))
-            write.table(tab.attractors, f, row.names = F, sep = "\t", quote = F)
-            return(tab.attractors)
-        }
-    }
-    
-    
-    load_fcs_files <- function(dir)
-    {
-        files <- list.files(dir, ".fcs")
-        files <- grep("cluster.fcs|downsample.fcs|ungated.fcs", files, invert = T, value = T, ignore.case = T)
-        res <- NULL
-        for(f in files)
-        {
-            population <- tail(strsplit(f, "_")[[1]], n = 1)
-            fcs <- read.FCS(paste(dir, f, sep = "/"))
-            tab <- convert_fcs(fcs)
-            
-            if(!all(pData(parameters(fcs))$desc == " "))
-            colnames(tab) <- pData(parameters(fcs))$desc
-            else
-            colnames(tab) <- pData(parameters(fcs))$name
-            colnames(tab) <- gsub("-", ".", colnames(tab))
-            tab <- as.matrix(tab)
-            tab[tab < 0] <- 0
-            tab <- as.data.frame(tab)
-            
-            tab <- cbind(tab, population, stringsAsFactors = FALSE)
-            res <- rbind(res, tab)
-        }
-        k <- unique(res$population)
-        k <- data.frame(population = k, cellType = seq_along(k), stringsAsFactors = FALSE)
-        res <- merge(res, k)
-        cat(k$population, file = paste(dir, "key.txt", sep = "/"), sep = "\n")
-        res <- res[, grep("population", names(res), invert = T)]
-        return(res)
-        
-    }
-    
-    
-
-
-    
-    
-    MODE <- "combined_ungated"
-
-    files.list <- list.files(".", "clustered.txt$")
-
-    if(MODE == "gated") {
-        print(paste("Using as reference", files.list[1], sep = " "))
-        ref.dir <- "gated/"
-        tab.attractors <- load_attractors(ref.dir)
-        att.labels <- read.table(paste(ref.dir, "key.txt", sep = "/"), header = F, sep = "\t")[,1]
-        G.attractors <- NULL
-    } else if(MODE == "existing") {
-        print(paste("Using as reference", list.files(".", "graphml")[[1]], sep = " "))
-        l <- load_existing_layout(list.files(".", "graphml")[[1]])
-        tab.attractors <- l$tab.attractors
-        G.attractors <- l$G.attractors
-        att.labels <- V(G.attractors)$name
-    } else if(MODE == "unsupervised") {
-        print(paste("Using as reference", files.list[1], sep = " "))
-        tab <- read.table(files.list[1], header = T, sep = "\t", quote = "", check.names = F)
-        temp <- get_attractors_from_graph_clustering(tab, col.names)
-        tab.attractors <- temp$tab.attractors
-        att.labels <- temp$att.labels
-        G.attractors <- NULL
-    } else if(MODE == "combined") {
-        ref.dir <- "gated/"
-        print(sprintf("Using as reference %s and %s", files.list[1], ref.dir))
-        tab <- read.table(files.list[1], header = T, sep = "\t", quote = "", check.names = F)
-        temp <- get_attractors_from_graph_clustering(tab, col.names)
-        tab.attractors <- temp$tab.attractors
-        att.labels <- temp$att.labels
-        temp.attractors <- load_attractors(ref.dir)
-        common.cols <- intersect(colnames(tab.attractors), colnames(temp.attractors))
-        
-        tab.attractors <- tab.attractors[, common.cols]
-        temp.attractors <- temp.attractors[, common.cols]
-        temp.att.labels <- read.table(paste(ref.dir, "key.txt", sep = "/"), header = F, sep = "\t")[,1]
-        temp.attractors$cellType <- seq(from = max(as.numeric(tab.attractors$cellType)) + 1, length = nrow(temp.attractors))
-        tab.attractors <- rbind(tab.attractors, temp.attractors)
-        att.labels <- c(att.labels, temp.att.labels)
-        G.attractors <- NULL
-    } else if(MODE == "combined_ungated") {
-        ref.dir <- "gated/"
-        ungated <- "ungated/Healthies_not_in_gated.fcs.clustered.txt"
-        print(sprintf("Using as reference %s and %s", ungated, ref.dir))
-        tab <- read.table(ungated, header = T, sep = "\t", quote = "", check.names = F)
-        temp <- get_attractors_from_graph_clustering(tab, col.names)
-        tab.attractors <- temp$tab.attractors
-        att.labels <- temp$att.labels
-        temp.attractors <- load_attractors(ref.dir)
-        common.cols <- intersect(colnames(tab.attractors), colnames(temp.attractors))
-        
-        tab.attractors <- tab.attractors[, common.cols]
-        temp.attractors <- temp.attractors[, common.cols]
-        temp.att.labels <- read.table(paste(ref.dir, "key.txt", sep = "/"), header = F, sep = "\t")[,1]
-        temp.attractors$cellType <- seq(from = max(as.numeric(tab.attractors$cellType)) + 1, length = nrow(temp.attractors))
-        tab.attractors <- rbind(tab.attractors, temp.attractors)
-        att.labels <- c(att.labels, temp.att.labels)
-        G.attractors <- NULL
-    }
-
-
-
-
-    for(f in files.list)
-    {
-        print(paste("Processing", f, sep = " "))
-        outname <- paste(strsplit(f, "\\.")[[1]][1], "graphml", sep = ".")
-        tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F)
-        #Filter out cluster that have all 0's '
-        this.col.names <- col.names[col.names %in% names(tab)]
-        tab <- tab[!apply(tab[, this.col.names], 1, function(x) {all(x == 0)}),]
-        tab <- filter_small_populations(tab)
-        
-        names(tab) <- gsub("cellType", "groups", names(tab))
-        names(tab) <- gsub("^X", "", names(tab))
-        res <- process_data(tab, G.attractors, tab.attractors, 
-                            col.names = this.col.names, att.labels = att.labels, already.clustered = T, outname = outname)
-        G.attractors <- res$G.attractors
-    }
-
-
-}
 

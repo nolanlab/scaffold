@@ -1,3 +1,4 @@
+/*
 <style>
 
 
@@ -26,21 +27,15 @@
 
 
 
-.label-cluster {
-    fill: rgb(200,200,200);
-    font-size: 2;
-    opacity: 0.8;
-}
-
-.label-landmark {
-    fill: rgb(0,0,0);
-    font-size: 4;
-}
 
 </style>
+*/
+//<script src="http://d3js.org/d3.v2.js"></script>
 
-<script src="http://d3js.org/d3.v2.js"></script>
-<script type="text/javascript">var networkOutputBinding = new Shiny.OutputBinding();
+
+//<script type="text/javascript">
+
+var networkOutputBinding = new Shiny.OutputBinding();
 $.extend(networkOutputBinding, {
          find: function(scope) {
          return $(scope).find('.shiny-network-output');
@@ -110,6 +105,7 @@ $.extend(networkOutputBinding, {
                     .attr("x2", function(d) { return d.x2; })
                     .attr("y2", function(d) { return d.y2; })
                     .style("stroke-width", function(d) { return Math.sqrt(d.value); })
+                    .style({"stroke" : "#999", "stroke-opacity" : ".6"})
                     .style("display", function(d) {
                           var displ_edges = $('[id=graphui_display_edges]').val();
                           if(displ_edges == "All")
@@ -132,6 +128,7 @@ $.extend(networkOutputBinding, {
                     .attr("cx", function(d) { return d.X; })
                     .attr("cy", function(d) { return d.Y; })
                     .style("fill", function(d) { return d.color; })
+                    .style({"stroke": "#000", "stroke-width": "0.5px"})
                     .on("click", function(d) {d.type == "1" ? Shiny.onInputChange("graphui_selected_landmark", d.name) : Shiny.onInputChange("graphui_selected_cluster", d.name)})
                     .on("mouseenter", function(d)
                         {
@@ -145,7 +142,7 @@ $.extend(networkOutputBinding, {
                         })
                     .on("mouseleave", function() {d3.selectAll("line.link").style("opacity", "1");})
                     ;
-         
+           
             var labels = vis.selectAll("text.label")
                 .data(nodes)
                 .enter().append("text")
@@ -153,8 +150,10 @@ $.extend(networkOutputBinding, {
                     .attr("x", function(d) { return d.X; })
                     .attr("y", function(d) { return d.Y; })
                     .text(function(d) {return d.name.replace(".fcs", "");})
-                    .style("display", function(d) {return(d.type == "1" ? "" : "none"); });
-         
+                    .style("fill", function(d) {return(d.type == "1" ? "rgb(0,0,0)" : "rgb(200,200,200)");})
+                    .style("font-size", function(d) {return(d.type == "1" ? "16" : "8");})
+                    .style("opacity", function(d) {return(d.type == "1" ? "1" : "0.8");})
+                    .style("display", function(d) {return(d.type == "1" ? "" : "none"); });               
          }
     });
 Shiny.outputBindings.register(networkOutputBinding, 'networkbinding');
@@ -217,4 +216,4 @@ Shiny.addCustomMessageHandler("toggle_node_size",
 );
 
 
-</script>
+//</script>

@@ -79,7 +79,11 @@ get_color_for_marker <- function(sc.data, sel.marker, sel.graph, color.scaling)
 {
     G <- sc.data$graphs[[sel.graph]]
     if(sel.marker == "Default")
-    return(rep("", vcount(G)))
+    {
+        ret <- rep("#4F93DE", vcount(G))
+        ret[V(G)$type == 1] <- "#FF7580"
+        return(ret)
+    }
     else
     {
         norm.factor <- NULL

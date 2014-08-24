@@ -31,7 +31,8 @@ render_graph_ui <- function(working.directory, ...){renderUI({
 fluidPage(
     fluidRow(
         column(9,
-            includeHTML("graph.js"),
+            tags$head(tags$script(src = "http://d3js.org/d3.v2.js")),
+            tags$head(tags$script(src = "graph.js")),
             reactiveNetwork(outputId = "graphui_mainnet")
         ),
         column(3,
@@ -197,9 +198,10 @@ shinyServer(function(input, output, session)
         {
             if(!is.null(input$analysisui_reference) && input$analysisui_reference != "")
             {
-                d <- scaffold:::my_load(paste(working.directory, input$analysisui_reference, sep = "/"))
-                markers <- scaffold:::get_numeric_vertex_attributes(d$graphs[[1]])
-                updateSelectInput(session, "analysisui_markers", choices = markers)
+              #For the time being load the marker values from the first clustered.txt file
+              f <- list.files(path = working.directory, pattern = "*.clustered.txt$", full.names = T)[1]
+              tab <- read.table(f, header = T, sep = "\t", check.names = F)
+              updateSelectInput(session, "analysisui_markers", choices = names(tab))
             }
         }
     })
@@ -240,7 +242,6 @@ shinyServer(function(input, output, session)
 
     scaffold_data <- reactive({
         file_name <- input$graphui_dataset
-        #file_name <- "mouse_immune_reference_1000.scaffold"
         if(!is.null(file_name) && file_name != "")
         {
             file_name <- paste(working.directory, file_name, sep = "/")
@@ -256,22 +257,20 @@ shinyServer(function(input, output, session)
     
     get_main_graph <- reactive({
         sc.data <- scaffold_data()
-        if(!is.null(sc.data))
+        print(sprintf("graph %s", input$graphui_selected_graph))
+        if(!is.null(sc.data) && !is.null(input$graphui_selected_graph) && input$graphui_selected_graph != "")
         {
-            if(!is.null(input$graphui_selected_graph) && input$graphui_selected_graph != "")
-            {
-                attrs <- scaffold:::get_numeric_vertex_attributes(sc.data, input$graphui_selected_graph)
-                isolate({
-                    sel.marker <- NULL
-                    if(input$graphui_marker %in% attrs)
-                        sel.marker <- input$graphui_marker
-                    else
-                        sel.marker <- "Default"
-                    updateSelectInput(session, "graphui_marker", choices = c("Default", attrs), selected = sel.marker)
-                    updateSelectInput(session, "graphui_markers_to_plot", choices = attrs)
-                })
-                scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform)
-            }
+          attrs <- scaffold:::get_numeric_vertex_attributes(sc.data, input$graphui_selected_graph)
+          isolate({
+            sel.marker <- NULL
+            if(input$graphui_marker %in% attrs)
+              sel.marker <- input$graphui_marker
+            else
+              sel.marker <- "Default"
+            updateSelectInput(session, "graphui_marker", choices = c("Default", attrs), selected = sel.marker)
+            updateSelectInput(session, "graphui_markers_to_plot", choices = attrs)
+          })
+          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform))
         }
         else
             return(NULL)
