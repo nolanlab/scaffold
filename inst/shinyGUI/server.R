@@ -1,6 +1,3 @@
-
-
-
 reactiveNetwork <- function (outputId)
 {
     HTML(paste("<div id=\"", outputId, "\" class=\"shiny-network-output\"><svg /></div>", sep=""))
@@ -132,19 +129,98 @@ render_analysis_ui <- function(working.directory, ...){renderUI({
 })}
 
 
+html_list <- function(vars, id) {
+  hl <- paste0("<ul id=\'",id,"\' class='stab'>")
+  for(i in vars) hl <- paste0(hl, "<li class='ui-state-default stab'><span class='label'>",i,"</span></li>")
+  paste0(hl, "</ul>")
+}
+
+returnOrder <- function(inputId, vars) {
+  tagList(
+    singleton(tags$head(tags$script(src = 'sort.js'))),
+    singleton(tags$head(tags$link(rel = 'stylesheet', type = 'text/css', href = 'sort.css'))),
+    HTML(html_list(vars, inputId)),
+    tags$script(paste0("$(function() {$( '#",inputId,"' ).sortable({placeholder: 'ui-state-highlight'}); $( '#",inputId,"' ).disableSelection(); });"))
+  )
+}
+
+
+updateReturnOrder <- function(session, inputId, vars)
+{
+  session$sendInputMessage(inputId, list(value = vars))
+}
+
+render_mapping_ui <- function(working.directory, ...){renderUI({
+  fluidPage(
+    tags$head(tags$script(src = "jquery-ui.min.js")),
+    fluidRow(
+      column(6,
+             selectInput("mappingui_ref_scaffold_file", "Select reference SCAFFoLD file", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$"))),
+             selectInput("mappingui_ref_scaffold_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T),
+             wellPanel(returnOrder("mappingui_ref_markers_list", c(""))),
+             br(), br(), br(), br(), br(), br()
+      ),
+      column(6,
+             selectInput("mappingui_sample_clustered_file", "Select a sample clustered file", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$"))),
+             selectInput("mappingui_sample_clustered_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T),
+             wellPanel(returnOrder("mappingui_clustered_markers_list", c(""))),
+             br(), br(), br(), br(), br(), br()
+      )
+    ),
+    fluidRow(
+      column(12,
+             verbatimTextOutput("mappingui_dialog"), br(), br(), br(), br(), br(), br()
+      )
+    )
+  )
+})}
 
 
 shinyServer(function(input, output, session)
 {
 
     working.directory <- dirname(file.choose())
-    #working.directory <- paste(getwd(), "data/", sep = "/")
     output$graphUI <- render_graph_ui(working.directory, input, output, session)
     output$analysisUI <- render_analysis_ui(working.directory, input, output, session)
     output$clusteringUI <- render_clustering_ui(working.directory, input, output, session)
-
-
-    #ClusteringUI markers
+    output$mappingUI <- render_mapping_ui(working.directory, input, output, session)
+    
+    #MappingUI functions
+    
+    observe({
+      if(!is.null(input$mappingui_sample_clustered_file) && input$mappingui_sample_clustered_file != "")
+      {
+        tab <- read.table(paste(working.directory, input$mappingui_sample_clustered_file, sep = "/"), header = T, sep = "\t", quote = "")
+        updateSelectInput(session, "mappingui_sample_clustered_file_markers", choices = names(tab))
+      }
+    })
+    
+    observe({
+      if(!is.null(input$mappingui_sample_clustered_file_markers) && length(input$mappingui_sample_clustered_file_markers > 0))
+      {
+        updateReturnOrder(session, "mappingui_clustered_markers_list", input$mappingui_sample_clustered_file_markers)
+      }
+    })
+    
+    observe({
+      if(!is.null(input$mappingui_ref_scaffold_file) && input$mappingui_ref_scaffold_file != "")
+      {
+        file_name <- paste(working.directory, input$mappingui_ref_scaffold_file, sep = "/")
+        sc.data <- scaffold:::my_load(file_name)
+        
+        updateSelectInput(session, "mappingui_ref_scaffold_file_markers", sc.data$scaffold.col.names)
+      }
+    })
+    
+    observe({
+      if(!is.null(input$mappingui_ref_scaffold_file_markers) && length(input$mappingui_ref_scaffold_file_markers > 0))
+      {
+        updateReturnOrder(session, "mappingui_ref_markers_list", input$mappingui_ref_scaffold_file_markers)
+      }
+    })
+    
+    
+    #ClusteringUI functions
 
     observe({
         if(!is.null(input$clusteringui_file_for_markers) && grepl("*.fcs$", input$clusteringui_file_for_markers))
@@ -257,7 +333,6 @@ shinyServer(function(input, output, session)
     
     get_main_graph <- reactive({
         sc.data <- scaffold_data()
-        print(sprintf("graph %s", input$graphui_selected_graph))
         if(!is.null(sc.data) && !is.null(input$graphui_selected_graph) && input$graphui_selected_graph != "")
         {
           attrs <- scaffold:::get_numeric_vertex_attributes(sc.data, input$graphui_selected_graph)
