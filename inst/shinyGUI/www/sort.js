@@ -29,7 +29,7 @@ $.extend(returnOrderBinding, {
       console.log(new_list);
       $(el).append(new_list);
     }
-    $(el).trigger('change');
+    $(el).trigger('sortupdate.ui-sortable');
   },  
   subscribe: function(el, callback) {
     $(el).on("sortupdate.ui-sortable", function(event) {

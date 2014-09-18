@@ -48,6 +48,7 @@ downsample_by <- function(tab, col.name, size)
     }, size = size))
 }
 
+
 load_attractors_from_gated_data <- function(dir)
 {
   files <- list.files(dir, ".fcs")
@@ -152,37 +153,50 @@ get_dataset_statistics <- function(dataset)
 
 add_missing_columns <- function(m, col.names, col.names.all)
 {
-  v <- col.names.all[!(col.names.all %in% col.names)]
-  print(sprintf("Adding missing columns: %s", paste(v, collapse = ", ")))
-  ret <- matrix(nrow = nrow(m), ncol = length(v), data = 0)
-  colnames(ret) <- v
-  ret <- data.frame(m, ret, check.names = F)
-  return(ret)
+    v <- col.names.all[!(col.names.all %in% col.names)]
+    print(sprintf("Adding missing columns: %s", paste(v, collapse = ", ")))
+    ret <- matrix(nrow = nrow(m), ncol = length(v), data = 0)
+    colnames(ret) <- v
+    ret <- data.frame(m, ret, check.names = F)
+    return(ret)
 }
 
+names_map_factory <- function(names.map)
+{
+    function(v)
+    {
+        sel <- v %in% names(names.map)
+        if(any(sel))
+            v[sel] <- names.map[v[sel]]
+        return(v)
+        
+    }
+}
 
 #ref.scaffold.markers are the scaffold markers of the reference file when we are in "Existing" mode
-process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode, ref.scaffold.markers = NULL, ...)
+process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode, ref.scaffold.markers = NULL, names.mapping = NULL, ...)
 {
     ret <- list(graphs = list(), clustered.data = list())
-    
+    map_names <- names_map_factory(names.mapping)
     for(f in files.list)
     {
         print(paste("Processing", f, sep = " "))
         tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F)
+        names(tab) <- map_names(names(tab))
         tab <- tab[!apply(tab[, col.names], 1, function(x) {all(x == 0)}),]
         #tab <- filter_small_populations(tab)
+    
         if(scaffold.mode == "existing")
         {
-          if(length(col.names) < length(ref.scaffold.markers))
-            tab <- add_missing_columns(tab, col.names, ref.scaffold.markers)
-          col.names.final <- ref.scaffold.markers
+            #if(length(col.names) < length(ref.scaffold.markers))
+            #    tab <- add_missing_columns(tab, col.names, ref.scaffold.markers)
+            #col.names.final <- ref.scaffold.markers
+            col.names.final <- col.names
         }
         else
         {
-          col.names.final <- col.names
+            col.names.final <- col.names
         }
-        
         
         names(tab) <- gsub("cellType", "groups", names(tab))
         names(tab) <- gsub("^X", "", names(tab))
@@ -191,6 +205,7 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
             col.names = col.names.final, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, ...)
         G.complete <- get_highest_scoring_edges(res$G.complete)
         clustered.data <- my_load(gsub("txt$", "all_events.RData", f))
+        names(clustered.data) <- map_names(names(clustered.data))
         clustered.data <- downsample_by(clustered.data, "cellType", 1000)
         
         ret$graphs[basename(f)] <- list(G.complete)
@@ -247,16 +262,16 @@ run_analysis_unsupervised <- function(working.dir, ref.file, col.names, ...)
 
 load_existing_layout <- function(scaffold.data)
 {
-  G <- scaffold.data$graphs[[1]]
-	G <- induced.subgraph(G, V(G)$type == 1, impl = "copy_and_delete")
-	tab <- get_vertex_table(G)
-	V(G)$name <- 1:vcount(G)
-	return(list(G.attractors = G, tab.attractors = tab))
+    G <- scaffold.data$graphs[[1]]
+    G <- induced.subgraph(G, V(G)$type == 1, impl = "copy_and_delete")
+    tab <- get_vertex_table(G)
+    V(G)$name <- 1:vcount(G)
+    return(list(G.attractors = G, tab.attractors = tab))
 }
 
 
 
-run_analysis_existing <- function(working.dir, ref.scaffold.file, col.names, ...)
+run_analysis_existing <- function(working.dir, ref.scaffold.file, col.names, names.mapping = NULL, ...)
 {
     files.list <- list.files(path = working.dir, pattern = "*.clustered.txt$")
     print(sprintf("Markers used for SCAFFoLD: %s", paste(col.names, collapse = ", ")))
@@ -272,7 +287,8 @@ run_analysis_existing <- function(working.dir, ref.scaffold.file, col.names, ...
     G.attractors <- l$G.attractors
     att.labels <- V(G.attractors)$Label
     
-    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode = "existing", ref.scaffold.markers = ref.scaffold.markers, ...)
+    ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, 
+                         scaffold.mode = "existing", ref.scaffold.markers = ref.scaffold.markers, names.mapping = names.mapping, ...)
     ret <- c(list(scaffold.col.names = col.names), ret)
     my_save(ret, paste(working.dir, sprintf("%s.scaffold", basename(files.list[[1]])), sep = "/"))
     return(files.list)

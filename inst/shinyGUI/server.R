@@ -157,23 +157,38 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
       column(6,
              selectInput("mappingui_ref_scaffold_file", "Select reference SCAFFoLD file", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$"))),
              selectInput("mappingui_ref_scaffold_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T),
+             br(), br(),
              wellPanel(returnOrder("mappingui_ref_markers_list", c(""))),
-             br(), br(), br(), br(), br(), br()
+             br(), br(), br()
       ),
       column(6,
              selectInput("mappingui_sample_clustered_file", "Select a sample clustered file", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$"))),
              selectInput("mappingui_sample_clustered_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T),
+             br(), br(),
              wellPanel(returnOrder("mappingui_clustered_markers_list", c(""))),
-             br(), br(), br(), br(), br(), br()
+             br(), br(), br()
       )
     ),
     fluidRow(
       column(12,
+             actionButton("mappingui_start", "Start analysis"), br(), br(),
+             conditionalPanel(
+               condition <- "$('html').hasClass('shiny-busy')",
+               br(),
+               p(strong("Processing data...please wait."))
+             ),
+             conditionalPanel(
+               condition <- "!$('html').hasClass('shiny-busy') && input.mappingui_start > 0",
+               br(),
+               p(strong("Data processing is complete!"))
+             ),
              verbatimTextOutput("mappingui_dialog"), br(), br(), br(), br(), br(), br()
       )
     )
   )
 })}
+
+
 
 
 shinyServer(function(input, output, session)
@@ -186,6 +201,28 @@ shinyServer(function(input, output, session)
     output$mappingUI <- render_mapping_ui(working.directory, input, output, session)
     
     #MappingUI functions
+    
+    output$mappingui_dialog <- renderText({
+        if(!is.null(input$mappingui_start) && input$mappingui_start != 0)
+            isolate({
+                col.names <- input$mappingui_clustered_markers_list
+                ref.col.names <- input$mappingui_ref_markers_list
+                names.map <- NULL
+                if(any(col.names != ref.col.names))
+                {
+                    names.map <- ref.col.names
+                    names(names.map) <- col.names
+                }
+                
+                scaffold:::run_analysis_existing(working.directory, input$mappingui_ref_scaffold_file,
+                                                 input$mappingui_ref_markers_list, names.map = names.map)
+                
+                updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))
+                ret <- sprintf("Analysis completed with markers %s\n", paste(input$mappingui_ref_scaffold_fil, collapse = " "))
+                ret <- paste(ret, sprintf("Mapping: %s -> %s\n", paste(names.map, collapse = " "), paste(names(names.map), collapse = " ")), sep = "")
+                return(ret)
+            })
+    })
     
     observe({
       if(!is.null(input$mappingui_sample_clustered_file) && input$mappingui_sample_clustered_file != "")
@@ -208,7 +245,7 @@ shinyServer(function(input, output, session)
         file_name <- paste(working.directory, input$mappingui_ref_scaffold_file, sep = "/")
         sc.data <- scaffold:::my_load(file_name)
         
-        updateSelectInput(session, "mappingui_ref_scaffold_file_markers", sc.data$scaffold.col.names)
+        updateSelectInput(session, "mappingui_ref_scaffold_file_markers", choices = sc.data$scaffold.col.names)
       }
     })
     
