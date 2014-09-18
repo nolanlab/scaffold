@@ -151,9 +151,9 @@ get_dataset_statistics <- function(dataset)
 
 
 
-add_missing_columns <- function(m, col.names, col.names.all)
+add_missing_columns <- function(m, col.names)
 {
-    v <- col.names.all[!(col.names.all %in% col.names)]
+    v <- col.names[!(col.names %in% colnames(m))]
     print(sprintf("Adding missing columns: %s", paste(v, collapse = ", ")))
     ret <- matrix(nrow = nrow(m), ncol = length(v), data = 0)
     colnames(ret) <- v
@@ -183,20 +183,23 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         print(paste("Processing", f, sep = " "))
         tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F)
         names(tab) <- map_names(names(tab))
-        tab <- tab[!apply(tab[, col.names], 1, function(x) {all(x == 0)}),]
-        #tab <- filter_small_populations(tab)
-    
         if(scaffold.mode == "existing")
         {
-            #if(length(col.names) < length(ref.scaffold.markers))
-            #    tab <- add_missing_columns(tab, col.names, ref.scaffold.markers)
-            #col.names.final <- ref.scaffold.markers
+            #Some markers in the reference scaffold file have been designated
+            #for mapping, but they are missing from the sample files
+            if(any(is.na(names(names.mapping))))
+                tab <- add_missing_columns(tab, col.names)
             col.names.final <- col.names
+            print(tab[1:10,])
         }
         else
         {
             col.names.final <- col.names
         }
+        tab <- tab[!apply(tab[, col.names], 1, function(x) {all(x == 0)}),]
+        #tab <- filter_small_populations(tab)
+    
+       
         
         names(tab) <- gsub("cellType", "groups", names(tab))
         names(tab) <- gsub("^X", "", names(tab))

@@ -207,19 +207,16 @@ shinyServer(function(input, output, session)
             isolate({
                 col.names <- input$mappingui_clustered_markers_list
                 ref.col.names <- input$mappingui_ref_markers_list
-                names.map <- NULL
-                if(any(col.names != ref.col.names))
-                {
-                    names.map <- ref.col.names
-                    names(names.map) <- col.names
-                }
-                
+                names.map <- ref.col.names
+                #Missing values (i.e. non-mapped markers) are filled with NA
+                names(names.map) <- col.names 
                 scaffold:::run_analysis_existing(working.directory, input$mappingui_ref_scaffold_file,
                                                  input$mappingui_ref_markers_list, names.map = names.map)
                 
                 updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))
                 ret <- sprintf("Analysis completed with markers %s\n", paste(input$mappingui_ref_scaffold_fil, collapse = " "))
-                ret <- paste(ret, sprintf("Mapping: %s -> %s\n", paste(names.map, collapse = " "), paste(names(names.map), collapse = " ")), sep = "")
+                if(!is.null(names.map))
+                    ret <- paste(ret, sprintf("Mapping: %s -> %s\n", paste(names.map, collapse = " "), paste(names(names.map), collapse = " ")), sep = "")
                 return(ret)
             })
     })
