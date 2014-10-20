@@ -14,5 +14,5 @@ Imports:
     igraph,
     plyr,
     reshape,
-    shiny,
+    shiny
 LazyData: true
