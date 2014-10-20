@@ -20,13 +20,13 @@ my_load <- function(f_name)
 
 convert_fcs <- function(f, asinh.cofactor)
 {
-    #comp <- grep("SPILL", names(description(fcs)), value = T)
-    #if(length(comp) > 0)
-    #{
-    #    print("Found compensation matrix, applying...")
-    #    comp <- description(f)[comp][[1]]
-    #    f <- compensate(f, spillover = comp)
-    #}
+    comp <- grep("SPILL", names(description(f)), value = T)
+    if(length(comp) > 0)
+    {
+        print("Found compensation matrix, applying...")
+        comp <- description(f)[comp][[1]]
+        f <- compensate(f, spillover = comp)
+    }
 	tab <- exprs(f)
     m <- as.matrix(tab)
 	m <- asinh(m / asinh.cofactor)

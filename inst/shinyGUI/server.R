@@ -227,7 +227,7 @@ shinyServer(function(input, output, session)
     observe({
       if(!is.null(input$mappingui_sample_clustered_file) && input$mappingui_sample_clustered_file != "")
       {
-        tab <- read.table(paste(working.directory, input$mappingui_sample_clustered_file, sep = "/"), header = T, sep = "\t", quote = "")
+        tab <- read.table(paste(working.directory, input$mappingui_sample_clustered_file, sep = "/"), header = T, sep = "\t", quote = "", check.names = F)
         updateSelectInput(session, "mappingui_sample_clustered_file_markers", choices = names(tab))
       }
     })
