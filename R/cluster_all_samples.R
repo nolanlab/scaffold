@@ -1,20 +1,9 @@
 options(stringsAsFactors = F)
 
 
-process_file <- function(f, wd, col.names, num_clusters, num_samples)
+process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofactor)
 {
-    library(flowCore)
-    library(plyr)
-    library(cluster)
     setwd(wd)
-   
-   
-    my_save <- function(obj, f_name)
-    {
-        con <- file(f_name, "wb")
-        serialize(obj, con, ascii = F)
-        close(con)
-    }
     
     cluster_data <- function(tab, col.names, k, algorithm = "", ...)
     {
@@ -38,22 +27,9 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples)
         return(tab)
     }
 
-    convert_fcs <- function(f)
-    {
-        tab <- exprs(f)
-        m <- as.matrix(tab)
-        m <- asinh(m / 5)
-        col.names <- colnames(m)
-        tab <- data.frame(m)
-        names(tab) <- col.names
-        return(tab)
-    }
-
-    
-    
     fcs.file <- read.FCS(f)
     orig.data <- exprs(fcs.file)
-    tab <- convert_fcs(fcs.file)
+    tab <- convert_fcs(fcs.file, asinh.cofactor)
     colnames(tab) <- pData(parameters(fcs.file))$desc
 
     if(any(is.na(colnames(tab))))
@@ -90,10 +66,10 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples)
     my_save(orig.data, paste(f, ".clustered.all_events.orig_data.RData", sep = ""))
 }
 
-cluster_fcs_files_in_dir <- function(wd, col.names, num_clusters, num_samples)
+cluster_fcs_files_in_dir <- function(wd, col.names, num_clusters, num_samples, asinh.cofactor)
 {
     files.list <- list.files(path = wd, pattern = "*.fcs$")
-    lapply(files.list, process_file, wd = wd, num_clusters = num_clusters, num_samples = num_samples)
+    lapply(files.list, process_file, wd = wd, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
     return(files.list)
 }
 

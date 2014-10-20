@@ -18,11 +18,18 @@ my_load <- function(f_name)
 }
 
 
-convert_fcs <- function(f)
+convert_fcs <- function(f, asinh.cofactor)
 {
+    comp <- grep("SPILL", names(description(fcs)), value = T)
+    if(length(comp) > 0)
+    {
+        print("Found compensation matrix, applying...")
+        comp <- description(fcs)[comp][[1]]
+        f <- compensate(f, spillover = comp)
+    }
 	tab <- exprs(f)
     m <- as.matrix(tab)
-	m <- asinh(m / 5)
+	m <- asinh(m / asinh.cofactor)
 	col.names <- colnames(m)
 	tab <- data.frame(m)
 	names(tab) <- col.names
@@ -49,15 +56,15 @@ downsample_by <- function(tab, col.name, size)
 }
 
 
-load_attractors_from_gated_data <- function(dir)
+load_attractors_from_gated_data <- function(dir, asinh.cofactor)
 {
   files <- list.files(dir, ".fcs")
 	res <- NULL
 	for(f in files)
 	{
-    population <- tail(strsplit(f, "_")[[1]], n = 1)
+        population <- tail(strsplit(f, "_")[[1]], n = 1)
 		fcs <- read.FCS(paste(dir, f, sep = "/"))
-		tab <- convert_fcs(fcs)
+		tab <- convert_fcs(fcs, asinh.cofactor)
         
         if(!all(pData(parameters(fcs))$desc == " "))
             colnames(tab) <- pData(parameters(fcs))$desc
@@ -181,7 +188,7 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
     for(f in files.list)
     {
         print(paste("Processing", f, sep = " "))
-        tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F)
+        tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F, comment.char = "")
         names(tab) <- map_names(names(tab))
         if(scaffold.mode == "existing")
         {
@@ -220,7 +227,7 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
     return(ret)
 }
 
-run_analysis_gated <- function(working.dir, ref.file, col.names, ...)
+run_analysis_gated <- function(working.dir, ref.file, col.names, asinh.cofactor, ...)
 {
     files.list <- list.files(path = working.dir, pattern = "*.clustered.txt$")
     files.list <- files.list[files.list != ref.file]
@@ -229,7 +236,7 @@ run_analysis_gated <- function(working.dir, ref.file, col.names, ...)
     print(paste("Using as reference", files.list[1], sep = " "))
     files.list <- paste(working.dir, files.list, sep = "/")
     ref.dir <- paste(working.dir, "gated/", sep = "/")
-    gated_data <- load_attractors_from_gated_data(ref.dir)
+    gated_data <- load_attractors_from_gated_data(ref.dir, asinh.cofactor)
     tab.attractors <- gated_data$tab.attractors
     att.labels <- gated_data$cellType_key$population
     G.attractors <- NULL

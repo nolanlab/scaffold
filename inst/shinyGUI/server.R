@@ -77,7 +77,9 @@ render_clustering_ui <- function(working.directory, ...){renderUI({
                 selectInput("clusteringui_file_for_markers", "Load marker names from file", choices = c("", list.files(path = working.directory, pattern = "*.fcs$"))),
                 selectInput("clusteringui_markers", "Choose the markers for clustering", choices = c(""), multiple = T),
                 numericInput("clusteringui_num_clusters", "Number of clusters", value = 200, min = 1, max = 2000),
-                numericInput("clusteringui_num_samples", "Number of samples", value = 50, min = 1), br(), br(), br(), br(), br(), br(),
+                numericInput("clusteringui_num_samples", "Number of samples", value = 50, min = 1), 
+                numericInput("clusteringui_asinh_cofactor", "asinh cofactor", value = 5), 
+                br(), br(), br(), br(), br(), br(),
                 actionButton("clusteringui_start", "Start clustering"), br(), br(),
                 conditionalPanel(
                     condition <- "$('html').hasClass('shiny-busy')", br(),
@@ -106,6 +108,7 @@ render_analysis_ui <- function(working.directory, ...){renderUI({
                 selectInput("analysisui_markers", "Choose the markers for SCAFFoLD", choices = c(""), multiple = T),
                 selectInput("analysisui_mode", "Running mode", choices = c("Gated", "Existing", "Unsupervised", "Combined")),
                 checkboxInput("analysisui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
+                numericInput("analysisui_asinh_cofactor", "asinh cofactor", 5),
                 actionButton("analysisui_start", "Start analysis"), br(), br(),
                 conditionalPanel(
                     condition <- "$('html').hasClass('shiny-busy')",
@@ -269,7 +272,8 @@ shinyServer(function(input, output, session)
         if(!is.null(input$clusteringui_start) && input$clusteringui_start != 0)
         isolate({
             col.names <- input$clusteringui_markers
-            files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, col.names, input$clusteringui_num_clusters, input$clusteringui_num_samples)
+            files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, col.names, 
+                                    input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
             ret <- sprintf("Clustering completed with markers %s\n", paste(input$clusteringui_markers, collapse = " "))
             ret <- paste(ret, sprintf("Files analyzed:\n%s", paste(files.analyzed, collapse = "\n")), sep = "")
             updateSelectInput(session, "analysisui_reference", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")))
@@ -326,7 +330,7 @@ shinyServer(function(input, output, session)
                         if(input$analysisui_mode == "Gated")
                         {
                             files.analyzed <- scaffold:::run_analysis_gated(working.directory, input$analysisui_reference,
-                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections)
+                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, asinh.cofactor = input$analysisui_asinh_cofactor)
                         }
                         else if(input$analysisui_mode == "Existing")
                         {
