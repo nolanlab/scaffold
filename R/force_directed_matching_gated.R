@@ -299,7 +299,7 @@ run_analysis_existing <- function(working.dir, ref.scaffold.file, col.names, nam
     
     ret <- process_files(files.list, G.attractors, tab.attractors, att.labels, col.names, 
                          scaffold.mode = "existing", ref.scaffold.markers = ref.scaffold.markers, names.mapping = names.mapping, ...)
-    ret <- c(list(scaffold.col.names = col.names), ret)
+    ret <- c(list(scaffold.col.names = col.names, landmarks.data = ref.scaffold.data$landmarks.data), ret)
     my_save(ret, paste(working.dir, sprintf("%s.scaffold", basename(files.list[[1]])), sep = "/"))
     return(files.list)
 }

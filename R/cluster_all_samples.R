@@ -56,14 +56,14 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofa
     temp <- data.frame(tab.medians, sample = f, popsize = pop.size[tab.medians$cellType, "V1"], check.names = F, stringsAsFactors = FALSE)
     
     colnames(temp) <- gsub("^X", "", colnames(temp))
-    m <- data.frame(m)
+    m <- data.frame(m, check.names = F)
     orig.data <- data.frame(orig.data, stringsAsFactors = FALSE, check.names = FALSE)
     colnames(orig.data) <- gsub("^X", "", colnames(orig.data))
     colnames(m) <- gsub("^X", "", colnames(m))
     
     write.table(temp, paste(f, ".clustered.txt", sep = ""), row.names = F, sep = "\t", quote = F)
     my_save(m, paste(f, ".clustered.all_events.RData", sep = ""))
-    my_save(orig.data, paste(f, ".clustered.all_events.orig_data.RData", sep = ""))
+    #my_save(orig.data, paste(f, ".clustered.all_events.orig_data.RData", sep = ""))
 }
 
 cluster_fcs_files_in_dir <- function(wd, col.names, num_clusters, num_samples, asinh.cofactor)
