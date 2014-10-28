@@ -173,6 +173,11 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
       )
     ),
     fluidRow(
+        column(12,
+               checkboxInput("mappingui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE)
+        )
+    ),
+    fluidRow(
       column(12,
              actionButton("mappingui_start", "Start analysis"), br(), br(),
              conditionalPanel(
@@ -214,7 +219,7 @@ shinyServer(function(input, output, session)
                 #Missing values (i.e. non-mapped markers) are filled with NA
                 names(names.map) <- col.names 
                 scaffold:::run_analysis_existing(working.directory, input$mappingui_ref_scaffold_file,
-                                                 input$mappingui_ref_markers_list, names.map = names.map)
+                                                 input$mappingui_ref_markers_list, inter.cluster.connections = input$mappingui_inter_cluster_connections, names.map = names.map)
                 
                 updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))
                 ret <- sprintf("Analysis completed with markers %s\n", paste(input$mappingui_ref_scaffold_fil, collapse = " "))

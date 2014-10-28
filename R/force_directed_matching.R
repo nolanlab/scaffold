@@ -73,7 +73,6 @@ get_distances_from_attractors <- function(m, tab, col.names, dist.thresh)
 	m <- as.matrix(m[, col.names])
 	dd <- t(apply(m, 1, function(x, att) {cosine_similarity_from_matrix(x, att)}, att))
     dist.thresh <- quantile(dd, probs = 0.85, na.rm = T)
-
     dd[is.na(dd)] <- 0 #This can happen if one of the attractors has all 0's for the markers of interest
 	dd <- filter_similarity_matrix(dd, dist.thresh)
 	return(dd)
@@ -142,7 +141,8 @@ add_vertices_to_attractors_graph <- function(G, tab.clustered, tab.median, col.n
 	
 	V(G)[1:num.vertices]$type <- 1 #attractor
 	V(G)[(num.vertices + 1):vcount(G)]$type <- 2 #cell
-	for(i in names(tab.clustered))
+
+    for(i in names(tab.clustered))
 		G <- set.vertex.attribute(G, name = i, index = (num.vertices + 1):vcount(G), value = tab.clustered[, i])
 	
 	G <- set_visual_attributes(G)
@@ -243,7 +243,6 @@ add_inter_clusters_connections <- function(G, col.names)
     G <- G + edges(e.list.igraph, weight = e.list$weight * 0.7)
     return(G)
 }
-
 
 
 

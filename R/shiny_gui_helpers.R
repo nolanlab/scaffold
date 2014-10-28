@@ -107,6 +107,8 @@ get_numeric_vertex_attributes <- function(sc.data, sel.graph)
 {
     G <- sc.data$graphs[[sel.graph]]
     d <- get.data.frame(G, what = "vertices")
+    #Don't consider attributes which are only present in the landmarks
+    d <- d[d$type == 2,]
     num <- sapply(d, function(x) {is.numeric(x) && !any(is.na(x))})
     v <- list.vertex.attributes(G)[num]
     exclude <- c("x", "y", "cellType", "type", "groups", "popsize", "r", "g", "b", "size", "DNA1", "DNA2", "BC1", "BC2", "BC3", "BC4", "BC5", "BC6", "Time", "Cell_length", "Cisplatin", "beadDist", "highest_scoring_edge")
