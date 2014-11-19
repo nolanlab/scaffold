@@ -17,4 +17,17 @@ Install Visual Studio. The Express version is freely available from Microsoft
 
 Install GCC. Refer to the documentation of your distribution to find the specific package name
 
+## Install required R packages
+
+You need to install the devtools package, available from CRAN, and the flowCore package from Bioconductor. The rest of the dependencies for SCAFFoLD will be automatically installed
+
+### Devtools
+
+Open an R session, type the following command and select a CRAN mirror when prompted.
+
+`install.packages("devtools")`
+
+
+
+
 scaffold
