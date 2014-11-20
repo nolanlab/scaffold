@@ -21,13 +21,13 @@ Install GCC. Refer to the documentation of your distribution to find the specifi
 
 You need to install the devtools package, available from CRAN, and the flowCore package from Bioconductor. The rest of the dependencies for SCAFFoLD will be automatically installed
 
-### Devtools
+#### Devtools
 
 Open an R session, type the following command and select a CRAN mirror when prompted.
 
 `install.packages("devtools")`
 
-### FlowCore
+#### FlowCore
 
 Open an R session and type the following commands
 
@@ -35,3 +35,5 @@ Open an R session and type the following commands
 source("http://bioconductor.org/biocLite.R")
 biocLite("flowCore")
 ```
+
+
