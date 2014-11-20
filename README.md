@@ -76,6 +76,9 @@ The gated populations have to be provided as single FCS files (one for each popu
 
 *WhateverYouWant*_B cells.fcs
 
+If you check the "Add inter-cluster connections" checkbox your graph will also include connections between the unsupervised clusters (Blue nodes). The default is for the unsupervised clusters (Blue nodes) to be connected only to the landmark populations (Red nodes). Please note that this feature is still experimental.
+
+After you have specified all the parameters you can click on the "Start analysis" button. The run should be pretty quick and it will create a single .scaffold file with the same name of the dataset that you have used as reference.
 
 
 
