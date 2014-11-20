@@ -38,4 +38,6 @@ source("http://bioconductor.org/biocLite.R")
 biocLite("flowCore")
 ```
 
+## Install SCAFFoLD
 
+Once you have succesfully completed the steps above type the following commands in your R session
