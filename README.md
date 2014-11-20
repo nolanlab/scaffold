@@ -70,7 +70,12 @@ The clustering is the only computationally intensive part of a SCAFFoLD analysis
 
 ## Construct a SCAFFoLD map
 
-Switch to the "Run SCAFFoLD Analysis" tab by using the top navigation bar. Using the first drop-down menu select the dataset that will act as the reference (The menu will only contain .clustered.txt files that are located in the current working directory). After you have chosen the markers that you want to use for the analysis select Gated as the running mode. This will use any number of gated populations as landmark nodes in the graph (Red nodes). The position of the landmark nodes will be constant across all the graphs you generate and will provide a visual reference that will allow you to compare the different datasets across each other.
+Switch to the "Run SCAFFoLD Analysis" tab by using the top navigation bar. Using the first drop-down menu select the dataset that will act as the reference (The menu will only contain .clustered.txt files that are located in the current working directory). After you have chosen the markers that you want to use for the analysis select Gated as the running mode. This will use any number of gated populations as landmark nodes in the graph (Red nodes). The position of the landmark nodes will be constant across all the graphs you generate and will provide a visual reference that will allow you to compare the different datasets across each other. 
+The gated populations have to be provided as single FCS files (one for each population) that need to be located in a subdirectory called "gated" of the current working directory. The program will split the name of the FCS file using "_" as separator and the last field will be used as the population name. For instance if you want an FCS file to define your "B cells" population you have to use the following naming scheme:
+
+*WhateverYouWant_B cells.fcs*
+
+
 
 
 
