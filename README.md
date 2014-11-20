@@ -1,4 +1,4 @@
-scaffold
+SCAFFoLD
 ========
 
 ## Installation
@@ -27,7 +27,9 @@ Open an R session, type the following command and select a CRAN mirror when prom
 
 `install.packages("devtools")`
 
+### FlowCore
 
+Open an R session and type the following commands
 
-
-scaffold
+`source("http://bioconductor.org/biocLite.R")
+biocLite("flowCore")`
