@@ -95,11 +95,6 @@ Switch to the "Map exploration" tab by using the top navigation bar. This is a r
 8. **Toggle landmark labels**: toggle the display of the landmark labels on/off
 9. **Toggle cluster labels**: toggle the display of the cluster labels on/off
 10. **Markers to plot in cluster view**: one of the most useful ways to inspect a cluster is to plot the distribution of expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. Using this box you can select the markers you want to inspect. To generate the actual plot simply click on a cluster node. A plot of the markers distributions will then appear in the lower half of the window. The figure will contains multiple subplots, one for each marker. Each subplot consists of a distribution of expression values for the cells in the cluster and the cells in all the landmark nodes the cluster is connected to. The different distribution can be distinguished by line color, with a legend to the right of each plot.
-11. 
-11. 
-12. here you can select the markers that you want to plot for a cluster 
-
-
 
 
 
