@@ -54,6 +54,7 @@ This will install the SCAFFoLD R package together with all the required dependen
 library(scaffold)
 scaffold.run()
 ```
+to stop SCAFFoLD simply hit the "ESC" key in your R session.
 
 # Usage
 
@@ -78,7 +79,18 @@ The gated populations have to be provided as single FCS files (one for each popu
 
 If you check the "Add inter-cluster connections" checkbox your graph will also include connections between the unsupervised clusters (Blue nodes). The default is for the unsupervised clusters (Blue nodes) to be connected only to the landmark populations (Red nodes). Please note that this feature is still experimental.
 
-After you have specified all the parameters you can click on the "Start analysis" button. The run should be pretty quick and it will create a single .scaffold file with the same name of the dataset that you have used as reference.
+After you have specified all the parameters you can click on the "Start analysis" button. The run should be pretty quick and it will create a single .scaffold file with the same name of the dataset that you have used as reference. This is a single self-contained bundle that contains everything you need to browse the data. You can move it in any folder you want and also share with other users, without having to share any of the original files.
+
+## Explore a SCAFFoLD map
+
+Switch to the "Map exploration" tab by using the top navigation bar. This is a rundown of what the operation of the differnent controls:
+
+1. **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
+2. **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
+3. **Nodes color**: use this dataset to color the nodes according to the expression of a specific marker, or with "Default" colors (unsupervised clusters:Blue, landmark populations:Red)
+4. 
+
+
 
 
 
