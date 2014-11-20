@@ -55,6 +55,16 @@ library(scaffold)
 scaffold.run()
 ```
 
+# Usage
+
+When you launch the GUI you will be prompted to select a file. You can select any file in what you want to be your working directory and this will set the working directory for the remainder of the session. SCAFFoLD will only look at files in your working directory, so everything you need must be there. Also if you add files to this directory you will need to restart the interface in order to see them in the dropdown menus. The first step of the analysis is to cluster the FCS files.
+
+## Clustering
+
+Select the "Run clustering" tab from the navbar at the top. In the clustering tab select a representative FCS file and then select the markers that you want to use for the clustering. Hit start clustering and wait for the procedure to complete. For each FCS files two files will be created:
+
+1. your-fcs-file.clustered.txt: this file contains the marker medians for each cluster
+2. your-fcs-file.clustered.all_events.RData: this file is an RData object which contains all the events in the original FCS file but with an added column that specifies the cluster membership. **The data in this file is arcsinh transformed**
 
 
 
