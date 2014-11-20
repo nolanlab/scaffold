@@ -87,8 +87,10 @@ Switch to the "Map exploration" tab by using the top navigation bar. This is a r
 
 1. **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
 2. **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
-3. **Nodes color**: use this dataset to color the nodes according to the expression of a specific marker, or with "Default" colors (unsupervised clusters:Blue, landmark populations:Red)
-4. 
+3. **Nodes color**: use this dataset to color the nodes according to the expression of a specific marker, or with "Default" colors (unsupervised clusters:Blue, landmark populations:Red).
+4. **Color scaling**: select whether you want the color scale of the nodes to be calculated globally for the whole dataset, or locally for the currently visualized graph.
+5. **Nodes size**: select whether you want the size of the nodes to be proportional to the number of cells in each cluster. Presently the size scale is calculated across the entire dataset.
+6. **Display edges**: select whether you want to display all the edges in the graph, or only the highest scoring one for each cluster. Even you if you are displaying all the edges you can visualize the highest scoring one for an individual cluster by hovering the mouse over the node.
 
 
 
