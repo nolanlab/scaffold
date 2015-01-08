@@ -1,0 +1,12 @@
+ /* .style({"stroke": "#000", "stroke-width": "0.5px"})*/
+ 
+ 
+ .node {
+    stroke: #000;
+    stroke-width: 0.5px;
+}
+
+.node.selected {
+    stroke: red;
+    stroke-width: 1px;
+}

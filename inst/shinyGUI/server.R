@@ -30,6 +30,9 @@ fluidPage(
         column(9,
             tags$head(tags$script(src = "http://d3js.org/d3.v2.js")),
             tags$head(tags$script(src = "graph.js")),
+            tags$head(tags$script(src = "rect_select.js")),
+            singleton(tags$head(tags$link(rel = 'stylesheet', type = 'text/css', href = 'rect_select.css'))),
+            singleton(tags$head(tags$link(rel = 'stylesheet', type = 'text/css', href = 'graph.css'))),
             reactiveNetwork(outputId = "graphui_mainnet")
         ),
         column(3,
@@ -43,6 +46,8 @@ fluidPage(
             actionButton("graphui_reset_graph_position", "Reset graph position"), br(),
             actionButton("graphui_toggle_landmark_labels", "Toggle landmark labels"), br(),
             actionButton("graphui_toggle_cluster_labels", "Toggle cluster labels"), br(),
+            actionButton("graphui_plot_clusters", "Plot selected clusters"), checkboxInput("graphui_pool_cluster_data", "Pool cluster data", value = FALSE), br(),
+            selectInput("graphui_plot_type", "Plot type:", choices = c("Density", "Boxplot")), br(),
             br(),
             selectInput("graphui_markers_to_plot", "Markers to plot in cluster view:", choices = c(""), multiple = T),
             br(), br(),
@@ -435,21 +440,23 @@ shinyServer(function(input, output, session)
 
     output$graphui_plot = renderPlot({
         p <- NULL
-        if(!is.null(input$graphui_selected_cluster) && input$graphui_selected_cluster != "")
+        if(!is.null(input$graphui_plot_clusters) && input$graphui_plot_clusters != 0)
         {
+            session$sendCustomMessage(type = "get_selected_nodes", list())
+            print(input$graphui_selected_nodes)
             col.names <- input$graphui_markers_to_plot
-            print(input$graphui_selected_cluster)
-            if(length(col.names >= 1))
-            p <- scaffold:::plot_cluster(scaffold_data(), input$graphui_selected_cluster, input$graphui_selected_graph, input$graphui_markers_to_plot)
+            if((length(col.names) >= 1) && (length(input$graphui_selected_nodes) >= 1))
+                p <- scaffold:::plot_cluster(scaffold_data(), input$graphui_selected_nodes, input$graphui_selected_graph, 
+                                             input$graphui_markers_to_plot, input$graphui_pool_cluster_data, input$graphui_plot_type)
         }
         print(p)
     })
 
 
-    output$graphui_plot_title = renderPrint({
-        if(!is.null(input$graphui_selected_cluster) && input$graphui_selected_cluster != "")
-            sprintf("Plotting cluster %s", input$graphui_selected_cluster)
-    })
+    #output$graphui_plot_title = renderPrint({
+    #    if(!is.null(input$graphui_selected_cluster) && input$graphui_selected_cluster != "")
+    #        sprintf("Plotting cluster %s", input$graphui_selected_cluster)
+    #})
     
   
     

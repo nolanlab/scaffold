@@ -71,6 +71,7 @@ $.extend(networkOutputBinding, {
          
             //append a new one
             svg = d3.select(el).append("svg");
+            svg = make_draggable(svg, zoom);
             svg.attr("width", width)
                 .attr("height", height)
                 .attr("id", "main_graph")
@@ -127,9 +128,18 @@ $.extend(networkOutputBinding, {
                           })
                     .attr("cx", function(d) { return d.X; })
                     .attr("cy", function(d) { return d.Y; })
-                    .style("fill", function(d) { return d.color; })
-                    .style({"stroke": "#000", "stroke-width": "0.5px"})
-                    .on("click", function(d) {d.type == "1" ? Shiny.onInputChange("graphui_selected_landmark", d.name) : Shiny.onInputChange("graphui_selected_cluster", d.name)})
+                    .style("fill", function(d) { return d.color; }) //attr or style??
+                   
+                    //.on("click", function(d) {d.type == "1" ? Shiny.onInputChange("graphui_selected_landmark", d.name) : Shiny.onInputChange("graphui_selected_cluster", d.name)})
+                    .on("click", function(d)
+                        {
+                            if(!d3.event.shiftKey) 
+                            {
+                                d3.selectAll( '.selected').classed( "selected", false);
+                            }
+                            d3.select(this).classed("selected", true);
+                        }
+                    )
                     .on("mouseenter", function(d)
                         {
                             if(d.type != "1")
@@ -204,6 +214,17 @@ Shiny.addCustomMessageHandler("toggle_display_edges",
             d3.selectAll(".link").style("display", function(d) {return(d.is_highest_scoring == 1 ? "" : "none")})
     }
 );
+
+Shiny.addCustomMessageHandler("get_selected_nodes",
+    function(value)
+    {
+        console.log("Here")
+        var res = d3.selectAll(".selected").data().map(function(d) {return(d.name)});
+        console.log(res);
+        Shiny.onInputChange("graphui_selected_nodes", res);
+    }
+);
+
 
 Shiny.addCustomMessageHandler("toggle_node_size",
     function(value)

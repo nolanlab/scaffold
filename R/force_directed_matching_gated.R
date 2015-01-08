@@ -190,18 +190,19 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         print(paste("Processing", f, sep = " "))
         tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F, comment.char = "")
         names(tab) <- map_names(names(tab))
+        ew_influence <- NULL
         if(scaffold.mode == "existing")
         {
             #Some markers in the reference scaffold file have been designated
             #for mapping, but they are missing from the sample files
             if(any(is.na(names(names.mapping))))
                 tab <- add_missing_columns(tab, col.names)
-            col.names.final <- col.names
+            ew_influence <- ceiling(sum(!is.na(names(names.mapping))) / 3)
             print(tab[1:10,])
         }
         else
         {
-            col.names.final <- col.names
+            ew_influence <- ceiling(length(col.names) / 3)
         }
         tab <- tab[!apply(tab[, col.names], 1, function(x) {all(x == 0)}),]
         #tab <- filter_small_populations(tab)
@@ -210,9 +211,8 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         
         names(tab) <- gsub("cellType", "groups", names(tab))
         names(tab) <- gsub("^X", "", names(tab))
-        ew_influence <- ceiling(length(col.names) / 3)
         res <- process_data(tab, G.attractors, tab.attractors,
-            col.names = col.names.final, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, ...)
+            col.names = col.names, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, ...)
         G.complete <- get_highest_scoring_edges(res$G.complete)
         clustered.data <- my_load(gsub("txt$", "all_events.RData", f))
         names(clustered.data) <- map_names(names(clustered.data))
