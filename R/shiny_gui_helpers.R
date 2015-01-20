@@ -42,6 +42,12 @@ get_graph_centering_transform <- function(x, y, svg.width, svg.height)
     
 }
 
+get_graph_table <- function(sc.data, sel.graph)
+{
+    G <- sc.data$graphs[[sel.graph]]
+    ret <- get.data.frame(G, what = c("vertices"))
+    return(ret)
+}
 
 get_graph <- function(sc.data, sel.graph, trans_to_apply)
 {
@@ -115,7 +121,20 @@ get_numeric_vertex_attributes <- function(sc.data, sel.graph)
     return(v[!(v %in% exclude)])
 }
 
-
+get_number_of_cells_per_landmark <- function(sc.data, sel.graph)
+{
+    G <- sc.data$graphs[[sel.graph]]
+    land <- V(G)[V(G)$type == 1]$Label
+    ee <- get.edgelist(G)
+    ee <- ee[V(G)[V(G)$type == 2]$highest_scoring_edge,]
+    vv <- V(G)[as.numeric(ee[,2])]
+    popsize <- V(G)[vv]$popsize
+    dd <- data.frame(Landmark = ee[,1], popsize)
+    dd <- ddply(dd, ~Landmark, function(x) {sum(x["popsize"])})
+    dd <- cbind(dd, Percentage = dd$V1 / sum(dd$V1))
+    names(dd) <- c("Landmark", "Cells", "Percentage")
+    return(dd)
+}
 
 get_fcs_col_names <- function(working.directory, f.name)
 {

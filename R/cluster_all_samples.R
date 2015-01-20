@@ -32,11 +32,7 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofa
     tab <- convert_fcs(fcs.file, asinh.cofactor)
     colnames(tab) <- pData(parameters(fcs.file))$desc
 
-    if(any(is.na(colnames(tab))))
-    {
-        w <- is.na(colnames(tab))
-        colnames(tab)[w] <- pData(parameters(fcs.file))$name[w]
-    }
+    
     
     
     tab <- as.matrix(tab)

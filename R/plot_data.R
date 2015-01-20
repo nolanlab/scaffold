@@ -8,8 +8,6 @@ plot_cluster <- function(data, clusters, graph.name, col.names, pool.cluster.dat
     clustered_data <- data$clustered.data[[graph.name]]
     #print(gated_data[1:10,])
     #print(clustered_data[1:10,])
-    
-
     names(clustered_data) <- gsub("^X", "", names(clustered_data))
     names(gated_data) <- gsub("^X", "", names(gated_data))
     clustered_data <- clustered_data[, c(col.names, "cellType")]

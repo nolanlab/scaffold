@@ -27,7 +27,7 @@ busy_dialog <- function(start.string, end.string)
 render_graph_ui <- function(working.directory, ...){renderUI({
 fluidPage(
     fluidRow(
-        column(9,
+        column(6,
             tags$head(tags$script(src = "http://d3js.org/d3.v2.js")),
             tags$head(tags$script(src = "graph.js")),
             tags$head(tags$script(src = "rect_select.js")),
@@ -36,37 +36,26 @@ fluidPage(
             reactiveNetwork(outputId = "graphui_mainnet")
         ),
         column(3,
+               dataTableOutput("graphui_table")
+        ),
+        column(3,
     
-            selectInput("graphui_dataset", "Choose a dataset:", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$"))),
-            selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
-            selectInput("graphui_marker", "Nodes color:", choices = c("")),
-            selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local")),
-            selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default")),
-            selectInput("graphui_display_edges", "Display edges:", choices = c("All", "Highest scoring only")), br(),
+            selectInput("graphui_dataset", "Choose a dataset:", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")), width = "100%"),
+            selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), width = "100%",
+                           options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
+            selectInput("graphui_marker", "Nodes color:", choices = c(""), width = "100%"),
+            selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local"), width = "100%"),
+            selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default"), width = "100%"),
+            selectInput("graphui_display_edges", "Display edges:", choices = c("All", "Highest scoring only"), width = "100%"), br(),
             actionButton("graphui_reset_graph_position", "Reset graph position"), br(),
             actionButton("graphui_toggle_landmark_labels", "Toggle landmark labels"), br(),
             actionButton("graphui_toggle_cluster_labels", "Toggle cluster labels"), br(),
             actionButton("graphui_plot_clusters", "Plot selected clusters"), checkboxInput("graphui_pool_cluster_data", "Pool cluster data", value = FALSE), br(),
-            selectInput("graphui_plot_type", "Plot type:", choices = c("Density", "Boxplot")), br(),
-            br(),
-            selectInput("graphui_markers_to_plot", "Markers to plot in cluster view:", choices = c(""), multiple = T),
-            br(), br(),
-            verbatimTextOutput("graphui_dialog1"),
-            htmlOutput("graphui_dialog2"),br(),
-            htmlOutput("graphui_dialog3"),
-            br(),br(),
-            p("Technical Note: As previously described elsewhere, we have observed higher background staining on Neutrophils, especially for antibodies used at higher concentrations (see Table S1). Therefore, protein expression on this population should be interpreted with caution")
+            selectInput("graphui_plot_type", "Plot type:", choices = c("Density", "Boxplot"), width = "100%"),
+            selectInput("graphui_markers_to_plot", "Markers to plot in cluster view:", choices = c(""), multiple = T, width = "100%"),
+            verbatimTextOutput("graphui_dialog1")
         )
     ),
-    
-    
-
-    fluidRow(
-        column(12,
-            verbatimTextOutput("graphui_plot_title")
-        )
-    ),
-    
     fluidRow(
         column(12,
             plotOutput("graphui_plot")
@@ -79,8 +68,8 @@ render_clustering_ui <- function(working.directory, ...){renderUI({
     fluidPage(
         fluidRow(
             column(6,
-                selectInput("clusteringui_file_for_markers", "Load marker names from file", choices = c("", list.files(path = working.directory, pattern = "*.fcs$"))),
-                selectInput("clusteringui_markers", "Choose the markers for clustering", choices = c(""), multiple = T),
+                selectInput("clusteringui_file_for_markers", "Load marker names from file", choices = c("", list.files(path = working.directory, pattern = "*.fcs$")), width = "100%"),
+                selectInput("clusteringui_markers", "Choose the markers for clustering", choices = c(""), multiple = T, width = "100%"),
                 numericInput("clusteringui_num_clusters", "Number of clusters", value = 200, min = 1, max = 2000),
                 numericInput("clusteringui_num_samples", "Number of samples", value = 50, min = 1), 
                 numericInput("clusteringui_asinh_cofactor", "asinh cofactor", value = 5), 
@@ -109,9 +98,9 @@ render_analysis_ui <- function(working.directory, ...){renderUI({
     fluidPage(
         fluidRow(
             column(6,
-                selectInput("analysisui_reference", "Choose a reference dataset:", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$"))),
-                selectInput("analysisui_markers", "Choose the markers for SCAFFoLD", choices = c(""), multiple = T),
-                selectInput("analysisui_mode", "Running mode", choices = c("Gated", "Existing", "Unsupervised", "Combined")),
+                selectInput("analysisui_reference", "Choose a reference dataset:", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")), width = "100%"),
+                selectInput("analysisui_markers", "Choose the markers for SCAFFoLD", choices = c(""), multiple = T, width = "100%"),
+                selectInput("analysisui_mode", "Running mode", choices = c("Gated", "Existing", "Unsupervised", "Combined"), width = "100%"),
                 checkboxInput("analysisui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
                 numericInput("analysisui_asinh_cofactor", "asinh cofactor", 5),
                 actionButton("analysisui_start", "Start analysis"), br(), br(),
@@ -163,15 +152,15 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
     tags$head(tags$script(src = "jquery-ui.min.js")),
     fluidRow(
       column(6,
-             selectInput("mappingui_ref_scaffold_file", "Select reference SCAFFoLD file", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$"))),
-             selectInput("mappingui_ref_scaffold_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T),
+             selectInput("mappingui_ref_scaffold_file", "Select reference SCAFFoLD file", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")), width = "100%"),
+             selectInput("mappingui_ref_scaffold_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T, width = "100%"),
              br(), br(),
              wellPanel(returnOrder("mappingui_ref_markers_list", c(""))),
              br(), br(), br()
       ),
       column(6,
-             selectInput("mappingui_sample_clustered_file", "Select a sample clustered file", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$"))),
-             selectInput("mappingui_sample_clustered_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T),
+             selectInput("mappingui_sample_clustered_file", "Select a sample clustered file", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")), width = "100%"),
+             selectInput("mappingui_sample_clustered_file_markers", "Select the markers to include in the mapping", choices = c(""), multiple = T, width = "100%"),
              br(), br(),
              wellPanel(returnOrder("mappingui_clustered_markers_list", c(""))),
              br(), br(), br()
@@ -391,7 +380,7 @@ shinyServer(function(input, output, session)
             else
               sel.marker <- "Default"
             updateSelectInput(session, "graphui_marker", choices = c("Default", attrs), selected = sel.marker)
-            updateSelectInput(session, "graphui_markers_to_plot", choices = attrs)
+            updateSelectInput(session, "graphui_markers_to_plot", choices = attrs, selected = attrs)
           })
           return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform))
         }
@@ -411,6 +400,8 @@ shinyServer(function(input, output, session)
         return(ret)
     })
     
+    output$graphui_table <- renderDataTable(scaffold:::get_number_of_cells_per_landmark(scaffold_data(), input$graphui_selected_graph), 
+                                            options = list(scrollX = TRUE, searching = FALSE, scrollY = "800px", paging = FALSE, info = FALSE))
     
     output$graphui_dialog1 <- reactive({
         sc.data <- scaffold_data()
@@ -429,12 +420,12 @@ shinyServer(function(input, output, session)
     #    }
     #})
     
-    output$graphui_dialog3 <- renderUI({
-        if(!is.null(input$graphui_selected_graph) && input$graphui_selected_graph == "BM-C57BL_6_Fluorescence.clustered.txt")
-        {
-            return(HTML("8-color fluorescence experiment from Bone Marrow of C57BL/6 mice<br>Data from Qiu et al., Nat Biotechnol (2011) 'Extracting a cellular hierarchy from high-dimensional cytometry data with SPADE', PMID: <a href='http://www.ncbi.nlm.nih.gov/pubmed/21964415' target='_blank'>21964415</a>"))
-        }
-    })
+    #output$graphui_dialog3 <- renderUI({
+    #    if(!is.null(input$graphui_selected_graph) && input$graphui_selected_graph == "BM-C57BL_6_Fluorescence.clustered.txt")
+    #    {
+    #        return(HTML("8-color fluorescence experiment from Bone Marrow of C57BL/6 mice<br>Data from Qiu et al., Nat Biotechnol (2011) 'Extracting a cellular hierarchy from high-dimensional cytometry data with SPADE', PMID: <a href='http://www.ncbi.nlm.nih.gov/pubmed/21964415' target='_blank'>21964415</a>"))
+    #    }
+    #})
 
 
 

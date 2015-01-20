@@ -111,7 +111,7 @@ get_highest_scoring_edges <- function(G)
 
 get_attractors_from_graph_clustering <- function(f_name, col.names)
 {
-    tab <- read.table(f_name, header = T, sep = "\t", check.names = F)
+    tab <- read.table(f_name, header = T, sep = "\t", check.names = F, stringsAsFactors = F)
     print("Running graph based clustering")
     tab <- tab[, grep("cellType|popsize|sample", colnames(tab), invert = T)]
     tab <- tab[!(apply(tab[, col.names], 1, function(x) {all(x == 0)} )),]
@@ -188,7 +188,7 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
     for(f in files.list)
     {
         print(paste("Processing", f, sep = " "))
-        tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F, comment.char = "")
+        tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F, comment.char = "", stringsAsFactors = F)
         names(tab) <- map_names(names(tab))
         ew_influence <- NULL
         if(scaffold.mode == "existing")
