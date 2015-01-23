@@ -93,16 +93,23 @@ load_attractors_from_gated_data <- function(dir, asinh.cofactor)
 
 get_highest_scoring_edges <- function(G)
 {
-    V(G)$highest_scoring_edge <- 0
-    for(i in 1:vcount(G))
+    #Remove inter-cluster edges for this calculation
+    e <- get.edges(G, E(G))
+    e <- cbind(V(G)$type[e[,1]], V(G)$type[e[,2]])
+    to.remove <- (e[,1] == 2) & (e[,2] == 2)     
+    g.temp <- delete.edges(G, E(G)[to.remove])
+        
+    V(g.temp)$highest_scoring_edge <- 0
+    for(i in 1:vcount(g.temp))
     {
-        if(V(G)$type[i] == 2)
+        if(V(g.temp)$type[i] == 2)
         {
-            sel.edges <- incident(G, i)
+            sel.edges <- incident(g.temp, i)
             max.edge <- sel.edges[which.max(E(G)[sel.edges]$weight)]
-            V(G)$highest_scoring_edge[i] <- max.edge
+            V(g.temp)$highest_scoring_edge[i] <- max.edge
         }
     }
+    V(G)$highest_scoring_edge <- V(g.temp)$highest_scoring_edge
     return(G)
 }
 
