@@ -49,6 +49,23 @@ get_graph_table <- function(sc.data, sel.graph)
     return(ret)
 }
 
+
+get_summary_table <- function(sc.data, sel.graph, sel.nodes)
+{
+    G <- sc.data$graphs[[sel.graph]]
+    col.names <- get_numeric_vertex_attributes(sc.data, sel.graph)
+    tab <- get.data.frame(G, what = "vertices")
+    temp <-tab[tab$Label %in% sel.nodes,]
+    ret <- temp[, col.names]    
+    ret <- rbind(ret, apply(ret, 2, median, na.rm = T))
+    popsize <- data.frame(Cells = temp$popsize, Percentage = temp$popsize / sum(tab$popsize[tab$type == 2]))
+    popsize <- rbind(popsize, colSums(popsize))
+    ret <- cbind(popsize, ret)
+    ret <- data.frame(Label = c(temp$Label, "Summary"), ret)
+    ret$Percentage <- signif(ret$Percentage * 100, digits = 4)
+    return(ret)
+}
+
 get_graph <- function(sc.data, sel.graph, trans_to_apply)
 {
     G <- sc.data$graphs[[sel.graph]]
@@ -133,6 +150,7 @@ get_number_of_cells_per_landmark <- function(sc.data, sel.graph)
     dd <- ddply(dd, ~Landmark, function(x) {sum(x["popsize"])})
     dd <- cbind(dd, Percentage = dd$V1 / sum(dd$V1))
     names(dd) <- c("Landmark", "Cells", "Percentage")
+    dd$Percentage <- signif(dd$Percentage, digits = 5)
     return(dd)
 }
 

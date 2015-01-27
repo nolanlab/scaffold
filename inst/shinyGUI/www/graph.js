@@ -138,6 +138,8 @@ $.extend(networkOutputBinding, {
                                 d3.selectAll( '.selected').classed( "selected", false);
                             }
                             d3.select(this).classed("selected", true);
+                            var res = d3.selectAll(".selected").data().map(function(d) {return(d.name)});
+                            Shiny.onInputChange("graphui_selected_nodes", res);
                         }
                     )
                     .on("mouseenter", function(d)

@@ -400,8 +400,20 @@ shinyServer(function(input, output, session)
         return(ret)
     })
     
-    output$graphui_table <- renderDataTable(scaffold:::get_number_of_cells_per_landmark(scaffold_data(), input$graphui_selected_graph), 
-                                            options = list(scrollX = TRUE, searching = FALSE, scrollY = "800px", paging = FALSE, info = FALSE))
+    output$graphui_table <- renderDataTable({
+        sc.data <- scaffold_data()
+        if(!is.null(sc.data) && !is.null(input$graphui_selected_graph) && input$graphui_selected_graph != "")
+        {
+            if(is.null(input$graphui_selected_nodes) || length(input$graphui_selected_nodes) == 0)
+            {
+                scaffold:::get_number_of_cells_per_landmark(scaffold_data(), input$graphui_selected_graph)     
+            }
+            else
+            {
+                scaffold:::get_summary_table(scaffold_data(), input$graphui_selected_graph, input$graphui_selected_nodes)
+            }
+        }
+    }, options = list(scrollX = TRUE, searching = FALSE, scrollY = "800px", paging = FALSE, info = FALSE, processing = FALSE))
     
     output$graphui_dialog1 <- reactive({
         sc.data <- scaffold_data()
@@ -431,14 +443,15 @@ shinyServer(function(input, output, session)
 
     output$graphui_plot = renderPlot({
         p <- NULL
+        #session$sendCustomMessage(type = "get_selected_nodes", list())
         if(!is.null(input$graphui_plot_clusters) && input$graphui_plot_clusters != 0)
         {
-            session$sendCustomMessage(type = "get_selected_nodes", list())
-            print(input$graphui_selected_nodes)
-            col.names <- input$graphui_markers_to_plot
-            if((length(col.names) >= 1) && (length(input$graphui_selected_nodes) >= 1))
-                p <- scaffold:::plot_cluster(scaffold_data(), input$graphui_selected_nodes, input$graphui_selected_graph, 
+            isolate({
+                col.names <- input$graphui_markers_to_plot
+                if((length(col.names) >= 1) && (length(input$graphui_selected_nodes) >= 1))
+                    p <- scaffold:::plot_cluster(scaffold_data(), input$graphui_selected_nodes, input$graphui_selected_graph, 
                                              input$graphui_markers_to_plot, input$graphui_pool_cluster_data, input$graphui_plot_type)
+            })
         }
         print(p)
     })

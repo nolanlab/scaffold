@@ -11,6 +11,8 @@ var make_draggable = function(svg, zoom)
 .on( "mousedown", function() {
     if( !d3.event.shiftKey) {
         d3.selectAll( '.selected').classed( "selected", false);
+        var res = d3.selectAll(".selected").data().map(function(d) {return(d.name)});
+        Shiny.onInputChange("graphui_selected_nodes", res);
     }
     if(d3.event.altKey)
     {
@@ -88,6 +90,8 @@ var make_draggable = function(svg, zoom)
                 .classed( "selected", true);
             }
         });
+        var res = d3.selectAll(".selected").data().map(function(d) {return(d.name)});
+        Shiny.onInputChange("graphui_selected_nodes", res);
     }
 })
 .on( "mouseup", function() {
