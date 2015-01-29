@@ -150,7 +150,7 @@ get_number_of_cells_per_landmark <- function(sc.data, sel.graph)
     dd <- ddply(dd, ~Landmark, function(x) {sum(x["popsize"])})
     dd <- cbind(dd, Percentage = dd$V1 / sum(dd$V1))
     names(dd) <- c("Landmark", "Cells", "Percentage")
-    dd$Percentage <- signif(dd$Percentage, digits = 5)
+    dd$Percentage <- signif(dd$Percentage * 100, digits = 4)
     return(dd)
 }
 
