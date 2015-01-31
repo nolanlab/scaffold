@@ -50,6 +50,8 @@ fluidPage(
             actionButton("graphui_reset_graph_position", "Reset graph position"), br(),
             actionButton("graphui_toggle_landmark_labels", "Toggle landmark labels"), br(),
             actionButton("graphui_toggle_cluster_labels", "Toggle cluster labels"), br(),
+            actionButton("graphui_export_selected_clusters", "Export selected clusters"), br(),
+            p("For the export to work, the original RData files corresponding to the clustered files in use must be located in the working directory"),
             actionButton("graphui_plot_clusters", "Plot selected clusters"), checkboxInput("graphui_pool_cluster_data", "Pool cluster data", value = FALSE), br(),
             selectInput("graphui_plot_type", "Plot type:", choices = c("Density", "Boxplot"), width = "100%"),
             selectInput("graphui_markers_to_plot", "Markers to plot in cluster view:", choices = c(""), multiple = T, width = "100%"),
@@ -485,6 +487,16 @@ shinyServer(function(input, output, session)
         if(!is.null(input$graphui_reset_colors) && input$graphui_reset_colors != 0)
         {
             session$sendCustomMessage(type = "reset_colors", "none")
+        }
+    })
+    
+    observe({
+        if(!is.null(input$graphui_export_selected_clusters) && input$graphui_export_selected_clusters > 0)
+        {
+            isolate({
+                if(!is.null(input$graphui_selected_nodes) && length(input$graphui_selected_nodes) >= 1)
+                    scaffold:::export_clusters(working.directory, input$graphui_selected_graph, input$graphui_selected_nodes)
+            })
         }
     })
     

@@ -66,6 +66,21 @@ get_summary_table <- function(sc.data, sel.graph, sel.nodes)
     return(ret)
 }
 
+
+export_clusters <- function(working.dir, sel.graph, sel.nodes)
+{
+    d <- gsub(".txt$", ".all_events.RData", sel.graph)
+    d <- file.path(working.dir, d)
+    d <- my_load(d)
+    clus <- as.numeric(gsub("c", "", sel.nodes))
+    d <- d[d$cellType %in% clus,]
+    f <- flowFrame(as.matrix(d))
+    p <- sprintf("scaffold_export_%s_", gsub(".fcs.clustered.txt", "", sel.graph))
+    outname <- tempfile(pattern = p, tmpdir = working.dir, fileext = ".fcs")
+    print(outname)
+    write.FCS(f, outname)
+}
+
 get_graph <- function(sc.data, sel.graph, trans_to_apply)
 {
     G <- sc.data$graphs[[sel.graph]]
