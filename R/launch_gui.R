@@ -1,7 +1,7 @@
 #' @export
-scaffold.run <- function()
+scaffold.run <- function(launch.browser = TRUE, ...)
 {
-    runApp(appDir = file.path(system.file(package = "scaffold"), "shinyGUI"), launch.browser=T)
+    runApp(appDir = file.path(system.file(package = "scaffold"), "shinyGUI"), launch.browser = launch.browser, ...)
 }
 
 
