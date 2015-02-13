@@ -103,6 +103,11 @@ render_analysis_ui <- function(working.directory, ...){renderUI({
                 selectInput("analysisui_reference", "Choose a reference dataset:", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")), width = "100%"),
                 selectInput("analysisui_markers", "Choose the markers for SCAFFoLD", choices = c(""), multiple = T, width = "100%"),
                 selectInput("analysisui_mode", "Running mode", choices = c("Gated", "Existing", "Unsupervised", "Combined"), width = "100%"),
+                selectInput("analysisui_ew_influence_type", "Edge weight influence", choices = c("Proportional", "Fixed"), width = "100%"),
+                conditionalPanel(
+                    condition = "input.analysisui_ew_influence_type == 'Fixed'",
+                    numericInput("analysisui_ew_influence", "Specifiy Edge weight value", 12), br()
+                ),
                 checkboxInput("analysisui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
                 numericInput("analysisui_asinh_cofactor", "asinh cofactor", 5),
                 actionButton("analysisui_start", "Start analysis"), br(), br(),
@@ -328,20 +333,30 @@ shinyServer(function(input, output, session)
                         !is.null(input$analysisui_markers) && length(input$analysisui_markers) > 0)
                     {
                         files.analyzed <- NULL
+                        ew_influence <- NULL
+                        if(!is.null(input$analysisui_ew_influence_type)
+                                && input$analysisui_ew_influence_type == 'Fixed')
+                        {
+                            if(!is.null(input$analysisui_ew_influence))
+                                ew_influence <- input$analysisui_ew_influence
+                        }
+                                
+                            
                         if(input$analysisui_mode == "Gated")
                         {
                             files.analyzed <- scaffold:::run_analysis_gated(working.directory, input$analysisui_reference,
-                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, asinh.cofactor = input$analysisui_asinh_cofactor)
+                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, 
+                                asinh.cofactor = input$analysisui_asinh_cofactor, ew_influence = ew_influence)
                         }
                         else if(input$analysisui_mode == "Existing")
                         {
                             files.analyzed <- scaffold:::run_analysis_existing(working.directory, input$analysisui_reference,
-                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections)
+                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, ew_influence = ew_influence)
                         }
                         if(input$analysisui_mode == "Unsupervised")
                         {
                             files.analyzed <- scaffold:::run_analysis_unsupervised(working.directory, input$analysisui_reference,
-                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections)
+                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, ew_influence = ew_influence)
                         }
                     }
                     updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))

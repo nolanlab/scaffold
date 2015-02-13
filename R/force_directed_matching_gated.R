@@ -188,7 +188,8 @@ names_map_factory <- function(names.map)
 }
 
 #ref.scaffold.markers are the scaffold markers of the reference file when we are in "Existing" mode
-process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode, ref.scaffold.markers = NULL, names.mapping = NULL, ...)
+process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode, 
+                          ref.scaffold.markers = NULL, names.mapping = NULL, ew_influence = NULL, ...)
 {
     ret <- list(graphs = list(), clustered.data = list())
     map_names <- names_map_factory(names.mapping)
@@ -197,19 +198,20 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         print(paste("Processing", f, sep = " "))
         tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F, comment.char = "", stringsAsFactors = F)
         names(tab) <- map_names(names(tab))
-        ew_influence <- NULL
         if(scaffold.mode == "existing")
         {
             #Some markers in the reference scaffold file have been designated
             #for mapping, but they are missing from the sample files
             if(any(is.na(names(names.mapping))))
                 tab <- add_missing_columns(tab, col.names)
-            ew_influence <- ceiling(sum(!is.na(names(names.mapping))) / 3)
+            if(is.null(ew_influence))
+                ew_influence <- ceiling(sum(!is.na(names(names.mapping))) / 3)
             print(tab[1:10,])
         }
         else
         {
-            ew_influence <- ceiling(length(col.names) / 3)
+            if(is.null(ew_influence))
+                ew_influence <- ceiling(length(col.names) / 3)
         }
         tab <- tab[!apply(tab[, col.names], 1, function(x) {all(x == 0)}),]
         #tab <- filter_small_populations(tab)
