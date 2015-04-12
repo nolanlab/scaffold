@@ -173,7 +173,8 @@ build_graph <- function(tab, col.names, filtering_T = 0.8)
 	row.names(m) <- tab$cellType
 	dd <- cosine_similarity_matrix(m)
     dd[is.na(dd)] <- 0 #This can happen if one of the attractors has all 0's for the markers of interest
-	if(filtering_T >= 1)
+    
+    if(filtering_T >= 1)
 		dd <- filter_similarity_matrix_by_rank(dd, filtering_T)
 	else
 		dd <- filter_similarity_matrix(dd, filtering_T)
@@ -211,13 +212,14 @@ cluster_data <- function(tab, col.names, k = 200, algorithm = "", ...)
 	return(tab)
 }
 
-add_inter_clusters_connections <- function(G, col.names)
+add_inter_clusters_connections <- function(G, col.names, weight.factor)
 {
     tab <- get_vertex_table(G)
     tab <- tab[tab$type == 2,]
     m <- as.matrix(tab[, col.names])
     row.names(m) <- tab$name
     dd <- cosine_similarity_matrix(m)
+    dd[is.na(dd)] <- 0
     dd <- filter_similarity_matrix_by_rank(dd, 3)
     dd <- filter_similarity_matrix(dd, 0.8)
     e.list <- NULL
@@ -240,13 +242,14 @@ add_inter_clusters_connections <- function(G, col.names)
     e.list.igraph <- c(t(as.matrix(e.list[, c("a", "b")])))
 
     #G <- G + edges(e.list, weight = (v ^ 30))
-    G <- G + edges(e.list.igraph, weight = e.list$weight * 0.7)
+    G <- G + edges(e.list.igraph, weight = e.list$weight * weight.factor)
     return(G)
 }
 
 
 
-process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.names = NULL, att.labels = NULL, dist.thresh = 0.7, already.clustered = FALSE, inter.cluster.connections = FALSE, ew_influence)
+process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.names = NULL, att.labels = NULL, dist.thresh = 0.7, 
+                         already.clustered = FALSE, inter.cluster.connections = FALSE, col.names.inter_cluster = NULL, inter_cluster.weight_factor = 0.7, ew_influence)
 {
     if(!already.clustered)
     {
@@ -256,6 +259,8 @@ process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.na
     else
         tab.clustered <- tab
 
+    if(is.null(col.names.inter_cluster) || col.names.inter_cluster == "")
+        col.names.inter_cluster = col.names
 	if(is.null(G.attractors))
 	{
 		G.attractors <- build_graph(tab.attractors, col.names)
@@ -264,7 +269,10 @@ process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.na
 		G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence)
         if(inter.cluster.connections)
         {
-            G.complete <- add_inter_clusters_connections(G.complete, col.names)
+            print("Adding inter-cluster connections with markers:")
+            print(col.names.inter_cluster)
+            print(sprintf("Weight factor:%f", inter_cluster.weight_factor))
+            G.complete <- add_inter_clusters_connections(G.complete, col.names.inter_cluster, weight.factor = inter_cluster.weight_factor)
             G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence)
         }
 		V(G.attractors)$x <- V(G.complete)$x[1:vcount(G.attractors)]
@@ -280,7 +288,10 @@ process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.na
 		G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence, fixed = fixed)
         if(inter.cluster.connections)
         {
-            G.complete <- add_inter_clusters_connections(G.complete, col.names)
+            print("Adding inter-cluster connections with markers:")
+            print(col.names.inter_cluster)
+            print(sprintf("Weight factor:%f", inter_cluster.weight_factor))
+            G.complete <- add_inter_clusters_connections(G.complete, col.names.inter_cluster, weight.factor = inter_cluster.weight_factor)
             G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence, fixed = fixed)
         }
 

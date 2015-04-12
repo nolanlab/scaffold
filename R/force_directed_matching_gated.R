@@ -165,11 +165,11 @@ get_dataset_statistics <- function(dataset)
 
 
 
-add_missing_columns <- function(m, col.names)
+add_missing_columns <- function(m, col.names, fill.data)
 {
     v <- col.names[!(col.names %in% colnames(m))]
     print(sprintf("Adding missing columns: %s", paste(v, collapse = ", ")))
-    ret <- matrix(nrow = nrow(m), ncol = length(v), data = 0)
+    ret <- matrix(nrow = nrow(m), ncol = length(v), data = fill.data)
     colnames(ret) <- v
     ret <- data.frame(m, ret, check.names = F)
     return(ret)
@@ -189,7 +189,8 @@ names_map_factory <- function(names.map)
 
 #ref.scaffold.markers are the scaffold markers of the reference file when we are in "Existing" mode
 process_files <- function(files.list, G.attractors, tab.attractors, att.labels, col.names, scaffold.mode, 
-                          ref.scaffold.markers = NULL, names.mapping = NULL, ew_influence = NULL, ...)
+                          ref.scaffold.markers = NULL, names.mapping = NULL, ew_influence = NULL, 
+                          col.names.inter_cluster = NULL, ...)
 {
     ret <- list(graphs = list(), clustered.data = list())
     map_names <- names_map_factory(names.mapping)
@@ -198,12 +199,13 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         print(paste("Processing", f, sep = " "))
         tab <- read.table(f, header = T, sep = "\t", quote = "", check.names = F, comment.char = "", stringsAsFactors = F)
         names(tab) <- map_names(names(tab))
+        col.names.inter_cluster <- map_names(col.names.inter_cluster)
         if(scaffold.mode == "existing")
         {
             #Some markers in the reference scaffold file have been designated
             #for mapping, but they are missing from the sample files
             if(any(is.na(names(names.mapping))))
-                tab <- add_missing_columns(tab, col.names)
+                tab <- add_missing_columns(tab, col.names, fill.data = 0)
             if(is.null(ew_influence))
                 ew_influence <- ceiling(sum(!is.na(names(names.mapping))) / 3)
             print(tab[1:10,])
@@ -221,7 +223,8 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         names(tab) <- gsub("cellType", "groups", names(tab))
         names(tab) <- gsub("^X", "", names(tab))
         res <- process_data(tab, G.attractors, tab.attractors,
-            col.names = col.names, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, ...)
+            col.names = col.names, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, 
+            col.names.inter_cluster = col.names.inter_cluster, ...)
         G.complete <- get_highest_scoring_edges(res$G.complete)
         clustered.data <- my_load(gsub("txt$", "all_events.RData", f))
         names(clustered.data) <- map_names(names(clustered.data))

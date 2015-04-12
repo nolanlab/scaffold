@@ -47,13 +47,16 @@ complete.forceatlas2 <- function(G, first.iter = 1000, overlap.iter = 1000, ...)
     #lines(ret$max_displ, col = "red")
     G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
 	G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
-    print("Second iteration with prevent overalp")
-	ret <- layout.forceatlas2(G, prevent.overlap = TRUE, iter = overlap.iter, ...)
-	lay <- ret$lay
-    #plot(ret$avg_displ, type = "l")
-    #lines(ret$max_displ, col = "red")
-    G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
-	G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
+    if(!is.null(overlap.iter))
+    {
+        print("Second iteration with prevent overalp")
+	    ret <- layout.forceatlas2(G, prevent.overlap = TRUE, iter = overlap.iter, ...)
+	    lay <- ret$lay
+        #plot(ret$avg_displ, type = "l")
+        #lines(ret$max_displ, col = "red")
+        G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
+	    G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
+    }
 	return(G)
 }
 	

@@ -10,15 +10,20 @@ plot_cluster <- function(data, clusters, graph.name, col.names, pool.cluster.dat
     #print(clustered_data[1:10,])
     names(clustered_data) <- gsub("^X", "", names(clustered_data))
     names(gated_data) <- gsub("^X", "", names(gated_data))
+    
+    #This only works if the col.names are actually present in the clustered.data
+    #TODO: figure out a consistent way to deal with panel mismatches
+    
+    common.names <- col.names[(col.names %in% names(clustered_data)) & (col.names %in% names(gated_data))]
     clustered_data <- clustered_data[, c(col.names, "cellType")]
-    gated_data <- gated_data[, c(col.names, "cellType")]
-    print(gated_data[1:5,])
+    gated_data <- gated_data[, c(common.names, "cellType")]
+    gated_data <- scaffold:::add_missing_columns(gated_data, col.names, fill.data = NA)
     #Select only the landmark nodes that are connected to these clusters
     land <- V(G)[nei(V(G)$Label %in% clusters)]$Label
     land <- V(G)[(V(G)$Label %in% land) & V(G)$type == 1]$Label
     temp <- gated_data[gated_data$cellType %in% land,]
     clus.num <- as.numeric(gsub("c", "", clusters))
-    temp.clustered <- clustered_data[clustered_data$cellType %in% clus.num,]
+    temp.clustered <- clustered_data[clustered_data$cellType %in% clus.num, ]
     if(pool.cluster.data)
         temp.clustered$cellType <- "Clusters"
     temp <- rbind(temp, temp.clustered)

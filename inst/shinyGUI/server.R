@@ -109,6 +109,11 @@ render_analysis_ui <- function(working.directory, ...){renderUI({
                     numericInput("analysisui_ew_influence", "Specifiy Edge weight value", 12), br()
                 ),
                 checkboxInput("analysisui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
+                conditionalPanel(
+                    condition = "input.analysisui_inter_cluster_connections == true",
+                    selectInput("analysisui_markers_inter_cluster", "Markers for inter-cluster connections (if different)", choices = c(""), multiple = T, width = "100%"), 
+                    numericInput("analysisui_inter_cluster_weight", "Weight factor for inter-cluster connections", 0.7, min = 0, max = 10, step = 0.1), br()
+                ),
                 numericInput("analysisui_asinh_cofactor", "asinh cofactor", 5),
                 actionButton("analysisui_start", "Start analysis"), br(), br(),
                 conditionalPanel(
@@ -175,7 +180,12 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
     ),
     fluidRow(
         column(12,
-               checkboxInput("mappingui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE)
+               checkboxInput("mappingui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
+               conditionalPanel(
+                   condition = "input.mappingui_inter_cluster_connections == true",
+                   selectInput("mappingui_markers_inter_cluster", "Markers for inter-cluster connections (if different)", choices = c(""), multiple = T, width = "100%"), 
+                   numericInput("mappingui_inter_cluster_weight", "Weight factor for inter-cluster connections", 0.7, min = 0, max = 10, step = 0.1), br()
+               )
         )
     ),
     fluidRow(
@@ -220,7 +230,10 @@ shinyServer(function(input, output, session)
                 #Missing values (i.e. non-mapped markers) are filled with NA
                 names(names.map) <- col.names 
                 scaffold:::run_analysis_existing(working.directory, input$mappingui_ref_scaffold_file,
-                                                 input$mappingui_ref_markers_list, inter.cluster.connections = input$mappingui_inter_cluster_connections, names.map = names.map)
+                                                 input$mappingui_ref_markers_list, inter.cluster.connections = input$mappingui_inter_cluster_connections, 
+                                                 names.map = names.map, col.names.inter_cluster = input$mappingui_markers_inter_cluster,
+                                                 inter_cluster.weight_factor = input$mappingui_inter_cluster_weight)
+                                                 
                 
                 updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))
                 ret <- sprintf("Analysis completed with markers %s\n", paste(input$mappingui_ref_scaffold_fil, collapse = " "))
@@ -235,6 +248,7 @@ shinyServer(function(input, output, session)
       {
         tab <- read.table(paste(working.directory, input$mappingui_sample_clustered_file, sep = "/"), header = T, sep = "\t", quote = "", check.names = F)
         updateSelectInput(session, "mappingui_sample_clustered_file_markers", choices = names(tab))
+        updateSelectInput(session, "mappingui_markers_inter_cluster", choices = names(tab))
       }
     })
     
@@ -312,6 +326,7 @@ shinyServer(function(input, output, session)
             {
                 tab <- read.table(paste(working.directory, input$analysisui_reference, sep = "/"), header = T, sep = "\t", check.names = F)
                 updateSelectInput(session, "analysisui_markers", choices = names(tab))
+                updateSelectInput(session, "analysisui_markers_inter_cluster", choices = names(tab))
             }
         }
         else if(get_analysisui_mode() == "Existing" && grepl("*.scaffold$", input$analysisui_reference))
@@ -322,6 +337,7 @@ shinyServer(function(input, output, session)
               f <- list.files(path = working.directory, pattern = "*.clustered.txt$", full.names = T)[1]
               tab <- read.table(f, header = T, sep = "\t", check.names = F)
               updateSelectInput(session, "analysisui_markers", choices = names(tab))
+              updateSelectInput(session, "analysisui_markers_inter_cluster", choices = names(tab))
             }
         }
     })
@@ -340,13 +356,13 @@ shinyServer(function(input, output, session)
                             if(!is.null(input$analysisui_ew_influence))
                                 ew_influence <- input$analysisui_ew_influence
                         }
-                                
-                            
+                        
+                        
                         if(input$analysisui_mode == "Gated")
                         {
                             files.analyzed <- scaffold:::run_analysis_gated(working.directory, input$analysisui_reference,
-                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, 
-                                asinh.cofactor = input$analysisui_asinh_cofactor, ew_influence = ew_influence)
+                                input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, col.names.inter_cluster = input$analysisui_markers_inter_cluster,
+                                asinh.cofactor = input$analysisui_asinh_cofactor, ew_influence = ew_influence, inter_cluster.weight_factor = input$analysisui_inter_cluster_weight)
                         }
                         else if(input$analysisui_mode == "Existing")
                         {
