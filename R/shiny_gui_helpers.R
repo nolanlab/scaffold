@@ -14,12 +14,12 @@ rescale_size <- function(max.size, min.size, max.val, x)
     return(((max.size - min.size) * x) / max.val + min.size);
 }
 
-get_vertex_size <- function(sc.data, sel.graph, figure.width)
+get_vertex_size <- function(sc.data, sel.graph, figure.width, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
     ret <- V(G)$popsize / sum(V(G)$popsize, na.rm = T)
-    ret <- rescale_size(60, 2, sc.data$dataset.statistics$max.marker.vals[["popsize.relative"]], ret)
-    ret[V(G)$type == 1] <- 8
+    ret <- rescale_size(max.node.size, min.node.size, sc.data$dataset.statistics$max.marker.vals[["popsize.relative"]], ret)
+    ret[V(G)$type == 1] <- landmark.node.size
     return(ret)
 }
 
@@ -81,7 +81,7 @@ export_clusters <- function(working.dir, sel.graph, sel.nodes)
     write.FCS(f, outname)
 }
 
-get_graph <- function(sc.data, sel.graph, trans_to_apply)
+get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
     edges <- get.edgelist(G, names = F) - 1
@@ -102,13 +102,16 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply)
     x <- (x / trans$scaling) - trans$offset.x
     y <- (y / trans$scaling) - trans$offset.y
     
-    vertex.size <- get_vertex_size(sc.data, sel.graph, svg.width)
+    vertex.size <- get_vertex_size(sc.data, sel.graph, svg.width, min.node.size, max.node.size, landmark.node.size)
     edges <- cbind(edges, x1 = x[edges[, "source"] + 1], x2 = x[edges[, "target"] + 1])
     edges <- cbind(edges, y1 = y[edges[, "source"] + 1], y2 = y[edges[, "target"] + 1])
     edges <- cbind(edges, id = 1:nrow(edges))
     edges <- cbind(edges, is_highest_scoring = 0)
+    edges <- cbind(edges, edge_type = "")
     #Set as true for the highest scoring edges of type 2 vertices
     edges[, "is_highest_scoring"][V(G)$highest_scoring_edge[V(G)$type == 2]] <- 1
+    if("edge_type" %in% list.edge.attributes(G)) #Old graphs did not have this
+        edges[, "edge_type"] <- E(G)$edge_type
     print(G)
     list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, links = edges, X = x, Y = y, trans_to_apply = trans_to_apply)
 }

@@ -1,5 +1,34 @@
 options(stringsAsFactors = F)
 
+
+adaptive_expand <- function(G, max.iter)
+{
+    print("Starting adaptive expansion")
+    x <- V(G)$x
+    y <- V(G)$y
+    m <- cbind(x, y)
+    ss <- outer(V(G)$size, V(G)$size, "+")
+    
+    for(i in 1:max.iter)
+    {
+        dd <- as.matrix(dist(m), method = "euclidean")
+        dd <- dd - ss
+        dd <- dd[upper.tri(dd)]
+        if(all(dd >= 0))
+            break
+        else
+            m <- m * 1.2
+    }
+    
+    print(sprintf("Expansion stopped at iteration: %d", i))
+    V(G)$x <- m[, "x"]
+    V(G)$y <- m[, "y"]
+    
+    return(G)
+}
+
+
+
 layout.forceatlas2 <- function(G, ew_influence = 1, kgrav = 1, iter = 1000, prevent.overlap = FALSE, fixed = rep(FALSE, vcount(G)), stopping_tolerance = 0.001, barnes_hut = FALSE)
 {
     if(vcount(G) >= 2000)
@@ -37,7 +66,7 @@ layout.forceatlas2 <- function(G, ew_influence = 1, kgrav = 1, iter = 1000, prev
 	return(list(lay = lay, avg_displ = avg_displ, max_displ = max_displ))
 }
 
-complete.forceatlas2 <- function(G, first.iter = 1000, overlap.iter = 1000, ...)
+complete.forceatlas2 <- function(G, first.iter = 1000, overlap.iter, overlap_method = NULL, ...)
 {
  
     print("First iteration")
@@ -47,15 +76,21 @@ complete.forceatlas2 <- function(G, first.iter = 1000, overlap.iter = 1000, ...)
     #lines(ret$max_displ, col = "red")
     G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
 	G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
-    if(!is.null(overlap.iter))
+    if(!is.null(overlap_method))
     {
-        print("Second iteration with prevent overalp")
-	    ret <- layout.forceatlas2(G, prevent.overlap = TRUE, iter = overlap.iter, ...)
-	    lay <- ret$lay
-        #plot(ret$avg_displ, type = "l")
-        #lines(ret$max_displ, col = "red")
-        G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
-	    G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
+        if(overlap_method == "repel")
+        {
+            print("Second iteration with prevent overalp")
+	        ret <- layout.forceatlas2(G, prevent.overlap = TRUE, iter = overlap.iter, ...)
+	        lay <- ret$lay
+            print(lay)
+            #plot(ret$avg_displ, type = "l")
+            #lines(ret$max_displ, col = "red")
+            G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
+	        G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
+        }
+        else if(overlap_method == "expand")
+            G <- adaptive_expand(G, overlap.iter)
     }
 	return(G)
 }

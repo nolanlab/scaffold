@@ -35,6 +35,22 @@
 
 //<script type="text/javascript">
 
+function display_edge(option_val, edge_type)
+{
+    console.log(option_val);
+    console.log(edge_type);
+    if(option_val == "All")
+        return true;
+    else if(option_val == "Inter cluster")
+        return(edge_type == "inter_cluster");
+    else if(option_val == "To landmark")
+        return(edge_type == "cluster_to_landmark" || edge_type == "highest_scoring");
+    else if(option_val == "Highest scoring")
+        return(edge_type == "highest_scoring");
+    else
+        return(false);
+}
+
 var networkOutputBinding = new Shiny.OutputBinding();
 $.extend(networkOutputBinding, {
          find: function(scope) {
@@ -109,10 +125,7 @@ $.extend(networkOutputBinding, {
                     .style({"stroke" : "#999", "stroke-opacity" : ".6"})
                     .style("display", function(d) {
                           var displ_edges = $('[id=graphui_display_edges]').val();
-                          if(displ_edges == "All")
-                            return("");
-                          else
-                            return(d.is_highest_scoring == "1" ? "" : "none");
+                          return(display_edge(displ_edges, d.edge_type) ? "" : "none");
                           });
          
             var node = vis.selectAll("circle.node")
@@ -210,10 +223,15 @@ Shiny.addCustomMessageHandler("toggle_label",
 Shiny.addCustomMessageHandler("toggle_display_edges",
     function(value)
     {
-        if(value == "All")
+        d3.selectAll(".link").style("display", function(d) {return(display_edge(value, d.edge_type) ? "" : "none")});
+        /*if(value == "All")
             d3.selectAll(".link").style("display", "");
-        else
-            d3.selectAll(".link").style("display", function(d) {return(d.is_highest_scoring == 1 ? "" : "none")})
+        else if(value == "Inter cluster")
+            d3.selectAll(".link").style("display", function(d) {return(d.type == "inter_cluster" ? "" : "none")});
+        else if(value == "To landmark")
+            d3.selectAll(".link").style("display", function(d) {return((d.type == "cluster_to_landmark" || d.type == "highest_scoring") ? "" : "none")});
+        else if(value == "Highest scoring")
+            d3.selectAll(".link").style("display", function(d) {return(d.type == "highest_scoring" ? "" : "none")});*/
     }
 );
 

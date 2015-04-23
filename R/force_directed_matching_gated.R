@@ -25,6 +25,14 @@ convert_fcs <- function(f, asinh.cofactor)
     {
         print("Found compensation matrix, applying...")
         comp <- description(f)[comp][[1]]
+        if(is.character(comp))
+        {
+            comp <- strsplit(comp, ",")[[1]]
+            num.channels <- as.numeric(comp[1])
+            m <- matrix(nrow = num.channels, byrow = T, data = as.numeric(comp[(num.channels + 2):length(comp)]))
+            colnames(m) <- comp[2:(1 + num.channels)]
+            comp <- m
+        }
         f <- compensate(f, spillover = comp)
     }
 	tab <- exprs(f)
@@ -95,10 +103,12 @@ get_highest_scoring_edges <- function(G)
 {
     #Remove inter-cluster edges for this calculation
     e <- get.edges(G, E(G))
+    E(G)$edge_type <- "cluster_to_landmark"
     e <- cbind(V(G)$type[e[,1]], V(G)$type[e[,2]])
     to.remove <- (e[,1] == 2) & (e[,2] == 2)     
+    E(G)$edge_type[(e[,1] == 2) & (e[,2] == 2)] <- "inter_cluster"
     g.temp <- delete.edges(G, E(G)[to.remove])
-        
+    
     V(g.temp)$highest_scoring_edge <- 0
     for(i in 1:vcount(g.temp))
     {
@@ -107,6 +117,7 @@ get_highest_scoring_edges <- function(G)
             sel.edges <- incident(g.temp, i)
             max.edge <- sel.edges[which.max(E(G)[sel.edges]$weight)]
             V(g.temp)$highest_scoring_edge[i] <- max.edge
+            E(G)$edge_type[max.edge] <- "highest_scoring"
         }
     }
     V(G)$highest_scoring_edge <- V(g.temp)$highest_scoring_edge
@@ -222,6 +233,7 @@ process_files <- function(files.list, G.attractors, tab.attractors, att.labels, 
         
         names(tab) <- gsub("cellType", "groups", names(tab))
         names(tab) <- gsub("^X", "", names(tab))
+        print(sprintf("Running with Edge weight: %f", ew_influence))
         res <- process_data(tab, G.attractors, tab.attractors,
             col.names = col.names, att.labels = att.labels, already.clustered = T, ew_influence = ew_influence, 
             col.names.inter_cluster = col.names.inter_cluster, ...)

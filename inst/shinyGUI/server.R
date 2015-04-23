@@ -46,7 +46,10 @@ fluidPage(
             selectInput("graphui_marker", "Nodes color:", choices = c(""), width = "100%"),
             selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local"), width = "100%"),
             selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default"), width = "100%"),
-            selectInput("graphui_display_edges", "Display edges:", choices = c("All", "Highest scoring only"), width = "100%"), br(),
+            numericInput("graphui_min_node_size", "Minimum node size", 2, min = 0, max = 1000),
+            numericInput("graphui_max_node_size", "Maximum node size", 60, min = 0, max = 1000),
+            numericInput("graphui_landmark_node_size", "Landmark node size", 8, min = 0, max = 1000),
+            selectInput("graphui_display_edges", "Display edges:", choices = c("All", "Highest scoring", "Inter cluster", "To landmark"), width = "100%"), br(),
             actionButton("graphui_reset_graph_position", "Reset graph position"), br(),
             actionButton("graphui_toggle_landmark_labels", "Toggle landmark labels"), br(),
             actionButton("graphui_toggle_cluster_labels", "Toggle cluster labels"), br(),
@@ -180,6 +183,7 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
     ),
     fluidRow(
         column(12,
+               selectInput("mappingui_overlap_method", "Overlap resolution method", choices = c("repel", "expand")),
                checkboxInput("mappingui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
                conditionalPanel(
                    condition = "input.mappingui_inter_cluster_connections == true",
@@ -232,7 +236,8 @@ shinyServer(function(input, output, session)
                 scaffold:::run_analysis_existing(working.directory, input$mappingui_ref_scaffold_file,
                                                  input$mappingui_ref_markers_list, inter.cluster.connections = input$mappingui_inter_cluster_connections, 
                                                  names.map = names.map, col.names.inter_cluster = input$mappingui_markers_inter_cluster,
-                                                 inter_cluster.weight_factor = input$mappingui_inter_cluster_weight)
+                                                 inter_cluster.weight_factor = input$mappingui_inter_cluster_weight,
+                                                 overlap_method = input$mappingui_overlap_method)
                                                  
                 
                 updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))
@@ -362,7 +367,7 @@ shinyServer(function(input, output, session)
                         {
                             files.analyzed <- scaffold:::run_analysis_gated(working.directory, input$analysisui_reference,
                                 input$analysisui_markers, inter.cluster.connections = input$analysisui_inter_cluster_connections, col.names.inter_cluster = input$analysisui_markers_inter_cluster,
-                                asinh.cofactor = input$analysisui_asinh_cofactor, ew_influence = ew_influence, inter_cluster.weight_factor = input$analysisui_inter_cluster_weight)
+                                asinh.cofactor = input$analysisui_asinh_cofactor, ew_influence = ew_influence, inter_cluster.weight_factor = input$analysisui_inter_cluster_weight, overlap_method = "repel")
                         }
                         else if(input$analysisui_mode == "Existing")
                         {
@@ -415,7 +420,8 @@ shinyServer(function(input, output, session)
             updateSelectInput(session, "graphui_marker", choices = c("Default", attrs), selected = sel.marker)
             updateSelectInput(session, "graphui_markers_to_plot", choices = attrs, selected = attrs)
           })
-          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform))
+          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform, input$graphui_min_node_size,
+                                      input$graphui_max_node_size, input$graphui_landmark_node_size))
         }
         else
             return(NULL)

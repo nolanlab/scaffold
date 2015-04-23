@@ -38,9 +38,12 @@ cosine_similarity_matrix <- function(m)
 	return(ret)
 }
 	
+
+
+
+
 filter_similarity_matrix <- function(m, T)
 {
-	diag(m) <- 0
 	ret <- t(apply(m, 1, function(x) 
 				   {
 						if(max(x) <= T)
@@ -54,7 +57,6 @@ filter_similarity_matrix <- function(m, T)
 
 filter_similarity_matrix_by_rank <- function(m, T)
 {
-	diag(m) <- 0
 	ret <- t(apply(m, 1, function(x) 
 				   {
 						r <- rank(x, ties.method = "first")
@@ -66,13 +68,35 @@ filter_similarity_matrix_by_rank <- function(m, T)
 }
 
 	
+
+distance_from_attractor_hard_filter <- function(dd, tab, col.names, thresh = 0.5)
+{
+    tab <- tab[, col.names]
+    w <- apply(tab[,col.names], 1, function(x, thresh) {all(x < thresh)}, thresh = thresh)
+    if(any(w))
+        print("Hard removing some connections to unstained landmarks")
+    dd[, w] <- 0
+    return(dd)
+}
+
+
 get_distances_from_attractors <- function(m, tab, col.names, dist.thresh)
 {
 	att <- as.matrix(tab[, col.names])
 	row.names(att) <- as.character(1:nrow(tab))
 	m <- as.matrix(m[, col.names])
 	dd <- t(apply(m, 1, function(x, att) {cosine_similarity_from_matrix(x, att)}, att))
+    dd <- distance_from_attractor_hard_filter(dd, tab, col.names, thresh = 1)
+    #####
+    #print("REMOVE ME!!!")
+    #temp.dd <- dd
+    #colnames(temp.dd) <- tab$Label
+    #write.table(temp.dd, "/Users/fede/temp/dist_matrix.txt", row.names = F, col.names = T, sep = "\t")
+	#write.table(tab, "/Users/fede/temp/tab_attractors.txt", row.names = F, col.names = T, sep = "\t")
+    #####
     dist.thresh <- quantile(dd, probs = 0.85, na.rm = T)
+    dist.thresh <- max(c(dist.thresh, 0.5))
+    
     dd[is.na(dd)] <- 0 #This can happen if one of the attractors has all 0's for the markers of interest
 	dd <- filter_similarity_matrix(dd, dist.thresh)
 	return(dd)
@@ -172,6 +196,7 @@ build_graph <- function(tab, col.names, filtering_T = 0.8)
 	m <- as.matrix(tab[, col.names])
 	row.names(m) <- tab$cellType
 	dd <- cosine_similarity_matrix(m)
+    diag(dd) <- 0
     dd[is.na(dd)] <- 0 #This can happen if one of the attractors has all 0's for the markers of interest
     
     if(filtering_T >= 1)
@@ -219,9 +244,14 @@ add_inter_clusters_connections <- function(G, col.names, weight.factor)
     m <- as.matrix(tab[, col.names])
     row.names(m) <- tab$name
     dd <- cosine_similarity_matrix(m)
+    diag(dd) <- 0
     dd[is.na(dd)] <- 0
+    
+    dist.thresh <- quantile(dd, probs = 0.85, na.rm = T)
+    dist.thresh <- max(c(dist.thresh, 0.5))
+    dd <- filter_similarity_matrix(dd, dist.thresh)
     dd <- filter_similarity_matrix_by_rank(dd, 3)
-    dd <- filter_similarity_matrix(dd, 0.8)
+    
     e.list <- NULL
     
     for(i in 1:nrow(dd))
@@ -249,7 +279,8 @@ add_inter_clusters_connections <- function(G, col.names, weight.factor)
 
 
 process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.names = NULL, att.labels = NULL, dist.thresh = 0.7, 
-                         already.clustered = FALSE, inter.cluster.connections = FALSE, col.names.inter_cluster = NULL, inter_cluster.weight_factor = 0.7, ew_influence)
+                         already.clustered = FALSE, inter.cluster.connections = FALSE, col.names.inter_cluster = NULL, inter_cluster.weight_factor = 0.7, ew_influence,
+                         overlap_method = NULL)
 {
     if(!already.clustered)
     {
@@ -266,14 +297,16 @@ process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.na
 		G.attractors <- build_graph(tab.attractors, col.names)
 		
 		G.complete <- add_vertices_to_attractors_graph(G.attractors, tab.clustered, tab.attractors, col.names, dist.thresh)
-		G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence)
+		G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, 
+                                           overlap.iter = 20000, ew_influence = ew_influence, overlap_method = "repel")
         if(inter.cluster.connections)
         {
             print("Adding inter-cluster connections with markers:")
             print(col.names.inter_cluster)
             print(sprintf("Weight factor:%f", inter_cluster.weight_factor))
             G.complete <- add_inter_clusters_connections(G.complete, col.names.inter_cluster, weight.factor = inter_cluster.weight_factor)
-            G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence)
+            G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, 
+                                               ew_influence = ew_influence, overlap_method = overlap_method)
         }
 		V(G.attractors)$x <- V(G.complete)$x[1:vcount(G.attractors)]
 		V(G.attractors)$y <- V(G.complete)$y[1:vcount(G.attractors)]
@@ -285,14 +318,16 @@ process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.na
 		fixed <- rep(FALSE, vcount(G.complete))
 		fixed[1:vcount(G.attractors)] <- TRUE
 		
-		G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence, fixed = fixed)
+		G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, 
+                                           overlap_method = "repel", ew_influence = ew_influence, fixed = fixed)
         if(inter.cluster.connections)
         {
             print("Adding inter-cluster connections with markers:")
             print(col.names.inter_cluster)
             print(sprintf("Weight factor:%f", inter_cluster.weight_factor))
             G.complete <- add_inter_clusters_connections(G.complete, col.names.inter_cluster, weight.factor = inter_cluster.weight_factor)
-            G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, ew_influence = ew_influence, fixed = fixed)
+            G.complete <- complete.forceatlas2(G.complete, first.iter = 50000, overlap.iter = 20000, 
+                                               overlap_method = overlap_method, ew_influence = ew_influence, fixed = fixed)
         }
 
 	}
