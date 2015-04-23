@@ -83,11 +83,17 @@ complete.forceatlas2 <- function(G, first.iter = 1000, overlap.iter, overlap_met
             print("Second iteration with prevent overalp")
 	        ret <- layout.forceatlas2(G, prevent.overlap = TRUE, iter = overlap.iter, ...)
 	        lay <- ret$lay
-            print(lay)
+            if(any(is.na(lay)))
+            {
+                print("Prevent overlap iteration failed")
+            }
             #plot(ret$avg_displ, type = "l")
             #lines(ret$max_displ, col = "red")
-            G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
-	        G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
+            else
+            {
+                G <- set.vertex.attribute(G, name = "x", value = lay[, 1])
+	            G <- set.vertex.attribute(G, name = "y", value = lay[, 2])
+            }
         }
         else if(overlap_method == "expand")
             G <- adaptive_expand(G, overlap.iter)
