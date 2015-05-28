@@ -14,5 +14,7 @@ Imports:
     igraph,
     plyr,
     reshape,
-    shiny
+    shiny,
+    grDevices,
+    parallel
 LazyData: true

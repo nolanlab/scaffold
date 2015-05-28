@@ -97,6 +97,8 @@ get_distances_from_attractors <- function(m, tab, col.names, dist.thresh)
     dist.thresh <- quantile(dd, probs = 0.85, na.rm = T)
     dist.thresh <- max(c(dist.thresh, 0.5))
     
+    
+    
     dd[is.na(dd)] <- 0 #This can happen if one of the attractors has all 0's for the markers of interest
 	dd <- filter_similarity_matrix(dd, dist.thresh)
 	return(dd)
@@ -282,6 +284,7 @@ process_data <- function(tab, G.attractors = NULL, tab.attractors = NULL, col.na
                          already.clustered = FALSE, inter.cluster.connections = FALSE, col.names.inter_cluster = NULL, inter_cluster.weight_factor = 0.7, ew_influence,
                          overlap_method = NULL)
 {
+
     if(!already.clustered)
     {
         tab <- cluster_data(tab, col.names)

@@ -53,6 +53,7 @@ filter_small_populations <- function(tab, T = 0.0001)
 
 downsample_by <- function(tab, col.name, size)
 {
+    print(sprintf("Downsampling to %d events", size))
     return(ddply(tab, col.name, function(x, size)
     {
         #s <- min(c(size, nrow(x)))

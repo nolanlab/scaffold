@@ -56,7 +56,7 @@ fluidPage(
             actionButton("graphui_export_selected_clusters", "Export selected clusters"), br(),
             p("For the export to work, the original RData files corresponding to the clustered files in use must be located in the working directory"),
             actionButton("graphui_plot_clusters", "Plot selected clusters"), checkboxInput("graphui_pool_cluster_data", "Pool cluster data", value = FALSE), br(),
-            selectInput("graphui_plot_type", "Plot type:", choices = c("Density", "Boxplot"), width = "100%"),
+            selectInput("graphui_plot_type", "Plot type:", choices = c("Density", "Boxplot", "Scatterplot"), width = "100%"),
             selectInput("graphui_markers_to_plot", "Markers to plot in cluster view:", choices = c(""), multiple = T, width = "100%"),
             verbatimTextOutput("graphui_dialog1")
         )
@@ -78,6 +78,7 @@ render_clustering_ui <- function(working.directory, ...){renderUI({
                 numericInput("clusteringui_num_clusters", "Number of clusters", value = 200, min = 1, max = 2000),
                 numericInput("clusteringui_num_samples", "Number of samples", value = 50, min = 1), 
                 numericInput("clusteringui_asinh_cofactor", "asinh cofactor", value = 5), 
+                numericInput("clusteringui_num_cores", "Number of CPU cores to use", value = 1), 
                 br(), br(), br(), br(), br(), br(),
                 actionButton("clusteringui_start", "Start clustering"), br(), br(),
                 conditionalPanel(
@@ -297,7 +298,7 @@ shinyServer(function(input, output, session)
         if(!is.null(input$clusteringui_start) && input$clusteringui_start != 0)
         isolate({
             col.names <- input$clusteringui_markers
-            files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, col.names, 
+            files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, input$clusteringui_num_cores, col.names, 
                                     input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
             ret <- sprintf("Clustering completed with markers %s\n", paste(input$clusteringui_markers, collapse = " "))
             ret <- paste(ret, sprintf("Files analyzed:\n%s", paste(files.analyzed, collapse = "\n")), sep = "")

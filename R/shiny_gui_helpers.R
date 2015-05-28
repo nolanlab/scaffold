@@ -84,7 +84,7 @@ export_clusters <- function(working.dir, sel.graph, sel.nodes)
 get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
-    edges <- get.edgelist(G, names = F) - 1
+    edges <- data.frame(get.edgelist(G, names = F) - 1)
     colnames(edges) <- c("source", "target")
     svg.width <- 1200
     svg.height <- 800
@@ -113,7 +113,10 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.nod
     if("edge_type" %in% list.edge.attributes(G)) #Old graphs did not have this
         edges[, "edge_type"] <- E(G)$edge_type
     print(G)
-    list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, links = edges, X = x, Y = y, trans_to_apply = trans_to_apply)
+    ret <- list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, X = x, Y = y, trans_to_apply = trans_to_apply)
+    ret <- c(ret, edges = list(edges))
+    
+    return(ret)
 }
 
 get_color_for_marker <- function(sc.data, sel.marker, sel.graph, color.scaling)

@@ -62,10 +62,11 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofa
     #my_save(orig.data, paste(f, ".clustered.all_events.orig_data.RData", sep = ""))
 }
 
-cluster_fcs_files_in_dir <- function(wd, col.names, num_clusters, num_samples, asinh.cofactor)
+cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num_samples, asinh.cofactor)
 {
     files.list <- list.files(path = wd, pattern = "*.fcs$")
-    lapply(files.list, process_file, wd = wd, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
+    parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
+             process_file, wd = wd, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
     return(files.list)
 }
 
