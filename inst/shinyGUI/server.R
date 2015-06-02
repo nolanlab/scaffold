@@ -28,7 +28,7 @@ render_graph_ui <- function(working.directory, ...){renderUI({
 fluidPage(
     fluidRow(
         column(6,
-            tags$head(tags$script(src = "http://d3js.org/d3.v2.js")),
+            tags$head(tags$script(src = "d3.min.js")),
             tags$head(tags$script(src = "graph.js")),
             tags$head(tags$script(src = "rect_select.js")),
             singleton(tags$head(tags$link(rel = 'stylesheet', type = 'text/css', href = 'rect_select.css'))),
