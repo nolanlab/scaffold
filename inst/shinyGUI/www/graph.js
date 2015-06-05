@@ -49,6 +49,20 @@ function display_edge(option_val, edge_type)
         return(false);
 }
 
+function parse_trans_string (a)
+{
+    //This requires the different arguments (transl, scale etc.) to be space-delimited
+    var b = {};
+    console.log(a);
+    for (var i in a = a.match(/(\w+\((\-?\d+\.?\d*e?\-?\d*,?)+\))+/g))
+    {
+        var c = a[i].match(/[\w\.\-]+/g);
+        b[c.shift()] = c;
+    }
+    return b;
+}
+
+
 var networkOutputBinding = new Shiny.OutputBinding();
 $.extend(networkOutputBinding, {
          find: function(scope) {
@@ -60,21 +74,21 @@ $.extend(networkOutputBinding, {
             var nodes = new Array();
             for (var i = 0; i < data.names.length; i++)
             {
-                nodes.push({"name": data.names[i], "X": data.X[i], "Y": data.Y[i], "color": data.color[i], "type": data.type[i], "size": data.size[i], "highest_scoring_edge" : data.highest_scoring_edge[i]})
+                nodes.push({"name": data.names[i], "X": data.X[i], "Y": data.Y[i], "color": data.color[i], "type": data.type[i], "size": data.size[i], "highest_scoring_edge" : data.highest_scoring_edge[i]});
             }
             
             var lin = new Array();
             var edges = data.edges;
             for(var i = 0; i < edges.id.length; i++)
             {
-                lin.push({"x1" : edges.x1[i], "x2" : edges.x2[i], "y1" : edges.y1[i], "y2" : edges.y2[i], "source" : edges.source[i], "target" : edges.target[i], "edge_type" : edges.edge_type[i], "id" : edges.id[i], "is_highest_scoring" : edges.is_highest_scoring[i]})
+                lin.push({"x1" : edges.x1[i], "x2" : edges.x2[i], "y1" : edges.y1[i], "y2" : edges.y2[i], "source" : edges.source[i], "target" : edges.target[i], "edge_type" : edges.edge_type[i], "id" : edges.id[i], "is_highest_scoring" : edges.is_highest_scoring[i]});
             }
             
                 
             
             function rescale()
             {
-                vis.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+                vis.attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
             }
          
             var width = 1200;
@@ -118,8 +132,13 @@ $.extend(networkOutputBinding, {
             var vis = svg.append('svg:g');
          
             if(data.trans_to_apply)
-                vis.attr("transform", data.trans_to_apply);
-         
+            {
+                var trans = parse_trans_string(data.trans_to_apply);
+                var trasl = trans.translate.map(parseFloat);
+                zoom.translate(trasl);
+                zoom.scale(trans.scale.map(parseFloat));
+                zoom.event(svg);
+            }
          
             var link = vis.selectAll("line.link")
                 .data(lin)
