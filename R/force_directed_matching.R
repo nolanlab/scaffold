@@ -87,13 +87,7 @@ get_distances_from_attractors <- function(m, tab, col.names, dist.thresh)
 	m <- as.matrix(m[, col.names])
 	dd <- t(apply(m, 1, function(x, att) {cosine_similarity_from_matrix(x, att)}, att))
     dd <- distance_from_attractor_hard_filter(dd, tab, col.names, thresh = 1)
-    #####
-    #print("REMOVE ME!!!")
-    #temp.dd <- dd
-    #colnames(temp.dd) <- tab$Label
-    #write.table(temp.dd, "/Users/fede/temp/dist_matrix.txt", row.names = F, col.names = T, sep = "\t")
-	#write.table(tab, "/Users/fede/temp/tab_attractors.txt", row.names = F, col.names = T, sep = "\t")
-    #####
+ 
     dist.thresh <- quantile(dd, probs = 0.85, na.rm = T)
     dist.thresh <- max(c(dist.thresh, 0.5))
     

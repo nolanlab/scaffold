@@ -112,7 +112,7 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.nod
     edges[, "is_highest_scoring"][V(G)$highest_scoring_edge[V(G)$type == 2]] <- 1
     if("edge_type" %in% list.edge.attributes(G)) #Old graphs did not have this
         edges[, "edge_type"] <- E(G)$edge_type
-    print(G)
+    #print(G)
     ret <- list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, X = x, Y = y, trans_to_apply = trans_to_apply)
     ret <- c(ret, edges = list(edges))
     
