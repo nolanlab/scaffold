@@ -13,7 +13,7 @@ You need to install the XCode software from Apple that is freely available on th
 
 #### Windows
 
-Install Visual Studio. The Express version is freely available from Microsoft
+Install the [Rtools](https://cran.r-project.org/bin/windows/Rtools/) package, which is required for building R packaged from sources
 
 #### Linux
 
