@@ -171,7 +171,6 @@ cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num
     files.list <- list.files(path = wd, pattern = "*.fcs$")
     parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
              process_file, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
-<<<<<<< HEAD
     return(files.list)
 }
 
@@ -179,8 +178,6 @@ cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_c
 {
     lapply(files.list,
                        process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
-=======
->>>>>>> 24869d080924e4ac9c9c22cb69ea4e9d22d2a475
     return(files.list)
 }
 
