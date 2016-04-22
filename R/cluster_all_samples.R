@@ -176,7 +176,7 @@ cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num
 
 cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_clusters, num_samples, asinh.cofactor)
 {
-    lapply(files.list,
+    parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
                        process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
     return(files.list)
 }
