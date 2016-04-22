@@ -43,7 +43,10 @@ fluidPage(
             selectInput("graphui_dataset", "Choose a dataset:", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")), width = "100%"),
             selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), width = "100%",
                            options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
+            selectizeInput("graphui_active_sample", "Active sample", choices = c("All"), width = "100%",
+                        options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
             selectInput("graphui_marker", "Nodes color:", choices = c(""), width = "100%"),
+            selectInput("graphui_stats_relative_to", "Calculate stats relative to:", choices = c("Absolute"), width = "100%"),
             selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local"), width = "100%"),
             selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default"), width = "100%"),
             numericInput("graphui_min_node_size", "Minimum node size", 2, min = 0, max = 1000),
@@ -69,12 +72,42 @@ fluidPage(
 )
 })}
 
+get_cluster_groups_table <- function(v, key) {
+    tags$table(class = "table table-hover table-striped",
+        tags$tr(tags$td(
+            v[1],
+            tags$button(class = "btn btn-xs btn-warning pull-right", onClick = sprintf("Shiny.onInputChange('clusteringui_remove_clustering_group', {'key':'%s', 'x':Math.random()})", key),
+                tags$span(class = "glyphicon glyphicon-trash")
+            )
+        )),
+        ifelse(length(v > 1), 
+            tagList(lapply(tail(v, n = -1), function(x) {tags$tr(tags$td(x))})),
+            tagList()
+        )
+    )
+}
+
+
 render_clustering_ui <- function(working.directory, ...){renderUI({
     fluidPage(
         fluidRow(
             column(6,
                 selectInput("clusteringui_file_for_markers", "Load marker names from file", choices = c("", list.files(path = working.directory, pattern = "*.fcs$")), width = "100%"),
-                selectInput("clusteringui_markers", "Choose the markers for clustering", choices = c(""), multiple = T, width = "100%"),
+                selectInput("clusteringui_markers", "Choose the markers for clustering", choices = c(""), multiple = T, width = "100%")
+            )
+        ),
+        fluidRow(
+            column(6,
+                   selectInput("clusteringui_files_list", label = "File list", choices = c(list.files(path = working.directory, pattern = "*.fcs$")),
+                               selectize = F, multiple = T, width = "100%"),
+                   actionButton("clusteringui_add_clustering_group", "Add clustering group")
+            ),
+            column(6,
+                   uiOutput("clusteringui_clustering_groups_table")
+            )
+        ),
+        fluidRow(
+            column(6,    
                 numericInput("clusteringui_num_clusters", "Number of clusters", value = 200, min = 1, max = 2000),
                 numericInput("clusteringui_num_samples", "Number of samples", value = 50, min = 1), 
                 numericInput("clusteringui_asinh_cofactor", "asinh cofactor", value = 5), 
@@ -217,7 +250,7 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
 
 shinyServer(function(input, output, session)
 {
-
+    options(shiny.error=traceback) 
     working.directory <- dirname(file.choose())
     output$graphUI <- render_graph_ui(working.directory, input, output, session)
     output$analysisUI <- render_analysis_ui(working.directory, input, output, session)
@@ -293,13 +326,38 @@ shinyServer(function(input, output, session)
         }
     })
     
+    clusteringui_reactive_values <- reactiveValues(clustering_groups = NULL)
+    
+    output$clusteringui_clustering_groups_table = renderUI({
+        dd <- clusteringui_reactive_values$clustering_groups
+        return(tagList(mapply(get_cluster_groups_table, dd, names(dd), SIMPLIFY = F)))
+    })
+    
+    observe({
+        key <- input$clusteringui_remove_clustering_group$key
+        if(!is.null(key) && key != "") 
+            isolate({
+                clusteringui_reactive_values$clustering_groups[key] <- NULL
+            })
+    })
+    
+    observeEvent(input$clusteringui_add_clustering_group, {
+        files_list <- isolate({input$clusteringui_files_list})
+        clusteringui_reactive_values$clustering_groups <- c(clusteringui_reactive_values$clustering_groups,
+                                                            setNames(list(files_list), files_list[1])
+        )
+        print(clusteringui_reactive_values$clustering_groups)  
+    })
+    
     
     output$clusteringui_dialog <- renderText({
         if(!is.null(input$clusteringui_start) && input$clusteringui_start != 0)
         isolate({
             col.names <- input$clusteringui_markers
-            files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, input$clusteringui_num_cores, col.names, 
+            files.analyzed <- scaffold:::cluster_fcs_files_groups(working.directory, clusteringui_reactive_values$clustering_groups, input$clusteringui_num_cores, col.names, 
                                     input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
+            #files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, input$clusteringui_num_cores, col.names, 
+            #                        input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
             ret <- sprintf("Clustering completed with markers %s\n", paste(input$clusteringui_markers, collapse = " "))
             ret <- paste(ret, sprintf("Files analyzed:\n%s", paste(files.analyzed, collapse = "\n")), sep = "")
             updateSelectInput(session, "analysisui_reference", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")))
@@ -412,6 +470,8 @@ shinyServer(function(input, output, session)
         if(!is.null(sc.data) && !is.null(input$graphui_selected_graph) && input$graphui_selected_graph != "")
         {
           attrs <- scaffold:::get_numeric_vertex_attributes(sc.data, input$graphui_selected_graph)
+          node.size.attr <- scaffold:::combine_marker_sample_name("popsize", input$graphui_active_sample)
+          
           isolate({
             sel.marker <- NULL
             if(input$graphui_marker %in% attrs)
@@ -420,8 +480,13 @@ shinyServer(function(input, output, session)
               sel.marker <- "Default"
             updateSelectInput(session, "graphui_marker", choices = c("Default", attrs), selected = sel.marker)
             updateSelectInput(session, "graphui_markers_to_plot", choices = attrs, selected = attrs)
+            sample.names <- scaffold:::get_sample_names(sc.data, input$graphui_selected_graph)
+            updateSelectInput(session, "graphui_active_sample", choices = c("All", sample.names),
+                              selected = input$graphui_active_sample)
+            updateSelectInput(session, "graphui_stats_relative_to", choices = c("Absolute", sample.names),
+                              selected = input$graphui_stats_relative_to)
           })
-          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform, input$graphui_min_node_size,
+          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform, node.size.attr, input$graphui_min_node_size,
                                       input$graphui_max_node_size, input$graphui_landmark_node_size))
         }
         else
@@ -434,7 +499,12 @@ shinyServer(function(input, output, session)
         {
             isolate({
                 if(!is.null(input$graphui_marker))
-                    ret$color <- scaffold:::get_color_for_marker(scaffold_data(), input$graphui_marker, input$graphui_selected_graph, input$graphui_color_scaling)
+                {
+                    sel.marker <- input$graphui_marker
+                    rel.to <- input$graphui_stats_relative_to
+                    ret$color <- scaffold:::get_color_for_marker(scaffold_data(), sel.marker, rel.to, 
+                                    input$graphui_selected_graph, input$graphui_active_sample, input$graphui_color_scaling)
+                }
             })
         }
         return(ret)
@@ -507,6 +577,7 @@ shinyServer(function(input, output, session)
     observe({
         if(is.null(input$graphui_marker)) return(NULL)
         sel.marker <- input$graphui_marker
+        rel.to <- input$graphui_stats_relative_to
         color.scaling <- input$graphui_color_scaling
         isolate({
             if(sel.marker != "")
@@ -514,7 +585,7 @@ shinyServer(function(input, output, session)
                 sc.data <- scaffold_data()
                 if(!is.null(sc.data))
                 {
-                    v <- scaffold:::get_color_for_marker(sc.data, sel.marker, input$graphui_selected_graph, color.scaling)
+                    v <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, input$graphui_active_sample, color.scaling)
                     session$sendCustomMessage(type = "color_nodes", v)
                 }
             }

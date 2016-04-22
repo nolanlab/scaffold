@@ -14,14 +14,35 @@ rescale_size <- function(max.size, min.size, max.val, x)
     return(((max.size - min.size) * x) / max.val + min.size);
 }
 
-get_vertex_size <- function(sc.data, sel.graph, figure.width, min.node.size, max.node.size, landmark.node.size)
+get_vertex_size <- function(sc.data, sel.graph, figure.width, node.size.attr, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
-    ret <- V(G)$popsize / sum(V(G)$popsize, na.rm = T)
+    size.attr <- get.vertex.attribute(G, node.size.attr)
+    ret <- size.attr / sum(size.attr, na.rm = T)
     ret <- rescale_size(max.node.size, min.node.size, sc.data$dataset.statistics$max.marker.vals[["popsize.relative"]], ret)
     ret[V(G)$type == 1] <- landmark.node.size
     return(ret)
 }
+
+
+get_sample_names <- function(sc.data, sel.graph) 
+{
+    G <- sc.data$graphs[[sel.graph]]
+    s <- list.vertex.attributes(G)
+    s <- grep("@", s, value = T)
+    ret <- sapply(strsplit(s, "@"), function (x) {x[[2]]})
+    return(unique(ret))
+}
+
+combine_marker_sample_name <- function(sel.marker, active.sample)
+{
+    if(active.sample == "All" || active.sample == "Absolute" || sel.marker == "Default")
+        return(sel.marker)
+    else
+        return(paste(sel.marker, active.sample, sep = "@"))
+    
+}
+
 
 get_graph_centering_transform <- function(x, y, svg.width, svg.height)
 {
@@ -81,7 +102,7 @@ export_clusters <- function(working.dir, sel.graph, sel.nodes)
     write.FCS(f, outname)
 }
 
-get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.node.size, landmark.node.size)
+get_graph <- function(sc.data, sel.graph, trans_to_apply, node.size.attr, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
     edges <- data.frame(get.edgelist(G, names = F) - 1)
@@ -102,7 +123,7 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.nod
     x <- (x / trans$scaling) - trans$offset.x
     y <- (y / trans$scaling) - trans$offset.y
     
-    vertex.size <- get_vertex_size(sc.data, sel.graph, svg.width, min.node.size, max.node.size, landmark.node.size)
+    vertex.size <- get_vertex_size(sc.data, sel.graph, svg.width, node.size.attr, min.node.size, max.node.size, landmark.node.size)
     edges <- cbind(edges, x1 = x[edges[, "source"] + 1], x2 = x[edges[, "target"] + 1])
     edges <- cbind(edges, y1 = y[edges[, "source"] + 1], y2 = y[edges[, "target"] + 1])
     edges <- cbind(edges, id = 1:nrow(edges))
@@ -115,11 +136,10 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply, min.node.size, max.nod
     #print(G)
     ret <- list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, X = x, Y = y, trans_to_apply = trans_to_apply)
     ret <- c(ret, edges = list(edges))
-    
     return(ret)
 }
 
-get_color_for_marker <- function(sc.data, sel.marker, sel.graph, color.scaling)
+get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, sel.graph, active.sample, color.scaling)
 {
     G <- sc.data$graphs[[sel.graph]]
     if(sel.marker == "Default")
@@ -131,16 +151,23 @@ get_color_for_marker <- function(sc.data, sel.marker, sel.graph, color.scaling)
     else
     {
         norm.factor <- NULL
-        v <- get.vertex.attribute(G, sel.marker)
-        if(color.scaling  == "global")
-        norm.factor <- sc.data$dataset.statistics$max.marker.vals[[sel.marker]]
-        else if(color.scaling == "local")
-        norm.factor <- max(v)
+        v <- get.vertex.attribute(G, combine_marker_sample_name(sel.marker, active.sample))
         
         a = "#E7E7E7"
         b = "#E71601"
         f <- colorRamp(c(a, b), interpolate = "linear")
-        
+        #browser()
+        if(rel.to.sample != "Absolute")
+        {
+            rel.to.marker <- combine_marker_sample_name(sel.marker, rel.to.sample)
+            v <- v / (get.vertex.attribute(G, rel.to.marker) + 0.001)
+            print("Forcing local color scaling")
+            color.scaling <- "local"
+        }
+        if(color.scaling  == "global")
+            norm.factor <- sc.data$dataset.statistics$max.marker.vals[[sel.marker]]
+        else if(color.scaling == "local")
+            norm.factor <- max(v, na.rm = T)
         v <- f(v / norm.factor) #colorRamp needs an argument in the range [0, 1]
         v <- apply(v, 1, function(x) {sprintf("rgb(%s)", paste(round(x), collapse = ","))})
         return(v)
