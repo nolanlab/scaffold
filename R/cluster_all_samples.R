@@ -69,10 +69,10 @@ process_files_groups <- function(files, wd, col.names, num_clusters, num_samples
         
         temp.tab <- as.matrix(temp.tab)
         temp.tab[temp.tab < 0] <- 0
-        temp.tab <- as.data.frame(temp.tab)
+        temp.tab <- as.data.frame(temp.tab, check.names = F)
         
-        temp.tab <- data.frame(temp.tab, sample = f)
-        temp.orig.data <- data.frame(temp.orig.data, sample = f)
+        temp.tab <- data.frame(temp.tab, sample = f, check.names = F)
+        temp.orig.data <- data.frame(temp.orig.data, sample = f, check.names = F)
         tab <- rbind(tab, temp.tab)
         orig.data <- rbind(orig.data, temp.orig.data)
     }
