@@ -160,7 +160,9 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, sel.graph, 
         if(rel.to.sample != "Absolute")
         {
             rel.to.marker <- combine_marker_sample_name(sel.marker, rel.to.sample)
-            v <- v / (get.vertex.attribute(G, rel.to.marker) + 0.001)
+            #v <- v / (get.vertex.attribute(G, rel.to.marker) + 0.001)
+            v <- v / (get.vertex.attribute(G, rel.to.marker))
+            v[is.infinite(v)] <- NA
             print("Forcing local color scaling")
             color.scaling <- "local"
         }
@@ -182,7 +184,7 @@ get_numeric_vertex_attributes <- function(sc.data, sel.graph)
     d <- d[d$type == 2,]
     num <- sapply(d, function(x) {is.numeric(x) && !any(is.na(x))})
     v <- list.vertex.attributes(G)[num]
-    exclude <- c("x", "y", "cellType", "type", "groups", "popsize", "r", "g", "b", "size", "DNA1", "DNA2", "BC1", "BC2", "BC3", "BC4", "BC5", "BC6", "Time", "Cell_length", "Cisplatin", "beadDist", "highest_scoring_edge")
+    exclude <- c("x", "y", "cellType", "type", "groups", "r", "g", "b", "size", "DNA1", "DNA2", "BC1", "BC2", "BC3", "BC4", "BC5", "BC6", "Time", "Cell_length", "Cisplatin", "beadDist", "highest_scoring_edge")
     return(v[!(v %in% exclude)])
 }
 

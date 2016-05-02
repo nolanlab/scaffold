@@ -108,6 +108,7 @@ render_clustering_ui <- function(working.directory, ...){renderUI({
         ),
         fluidRow(
             column(6,    
+                numericInput("clusteringui_downsample_to", "Pre-downsample data to (0 means no pre-downsampling, only valid for multiple files clustering)", value = 0),
                 numericInput("clusteringui_num_clusters", "Number of clusters", value = 200, min = 1, max = 2000),
                 numericInput("clusteringui_num_samples", "Number of samples", value = 50, min = 1), 
                 numericInput("clusteringui_asinh_cofactor", "asinh cofactor", value = 5), 
@@ -217,6 +218,11 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
     ),
     fluidRow(
         column(12,
+               selectInput("mappingui_ew_influence_type", "Edge weight influence", choices = c("Proportional", "Fixed")),
+               conditionalPanel(
+                   condition = "input.mappingui_ew_influence_type == 'Fixed'",
+                   numericInput("mappingui_ew_influence", "Specifiy Edge weight value", 12), br()
+               ),
                selectInput("mappingui_overlap_method", "Overlap resolution method", choices = c("repel", "expand")),
                checkboxInput("mappingui_inter_cluster_connections", "Add inter-cluster connections", value = FALSE),
                conditionalPanel(
@@ -267,11 +273,19 @@ shinyServer(function(input, output, session)
                 names.map <- ref.col.names
                 #Missing values (i.e. non-mapped markers) are filled with NA
                 names(names.map) <- col.names 
+                ew_influence <- NULL
+                if(!is.null(input$mappingui_ew_influence_type) && input$mappingui_ew_influence_type == 'Fixed')
+                {
+                    if(!is.null(input$mappingui_ew_influence))
+                        ew_influence <- input$mappingui_ew_influence
+                }
+                
+                
                 scaffold:::run_analysis_existing(working.directory, input$mappingui_ref_scaffold_file,
                                                  input$mappingui_ref_markers_list, inter.cluster.connections = input$mappingui_inter_cluster_connections, 
                                                  names.map = names.map, col.names.inter_cluster = input$mappingui_markers_inter_cluster,
                                                  inter_cluster.weight_factor = input$mappingui_inter_cluster_weight,
-                                                 overlap_method = input$mappingui_overlap_method)
+                                                 overlap_method = input$mappingui_overlap_method, ew_influence = ew_influence)
                                                  
                 
                 updateSelectInput(session, "graphui_dataset", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")))
@@ -355,7 +369,7 @@ shinyServer(function(input, output, session)
         isolate({
             col.names <- input$clusteringui_markers
             files.analyzed <- scaffold:::cluster_fcs_files_groups(working.directory, clusteringui_reactive_values$clustering_groups, input$clusteringui_num_cores, col.names, 
-                                    input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
+                                    input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor, input$clusteringui_downsample_to)
             #files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, input$clusteringui_num_cores, col.names, 
             #                        input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
             ret <- sprintf("Clustering completed with markers %s\n", paste(input$clusteringui_markers, collapse = " "))

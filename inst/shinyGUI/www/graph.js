@@ -148,8 +148,10 @@ $.extend(networkOutputBinding, {
                     .attr("y1", function(d) { return d.y1; })
                     .attr("x2", function(d) { return d.x2; })
                     .attr("y2", function(d) { return d.y2; })
-                    .style("stroke-width", function(d) { return Math.sqrt(d.value); })
-                    .style({"stroke" : "#999", "stroke-opacity" : ".6"})
+                    //.style("stroke-width", function(d) { return Math.sqrt(d.value); })
+                    //.style({"stroke" : "#999", "stroke-opacity" : ".6"})
+                    .style("stroke-width", "0.5")
+                    .style("stroke", "#D9D9D9")
                     .style("display", function(d) {
                           var displ_edges = $('[id=graphui_display_edges]').val();
                           return(display_edge(displ_edges, d.edge_type) ? "" : "none");
@@ -203,7 +205,8 @@ $.extend(networkOutputBinding, {
                     .attr("y", function(d) { return d.Y; })
                     .text(function(d) {return d.name.replace(".fcs", "");})
                     .style("fill", function(d) {return(d.type == "1" ? "rgb(0,0,0)" : "rgb(200,200,200)");})
-                    .style("font-size", function(d) {return(d.type == "1" ? "16" : "8");})
+                    //.style("font-size", function(d) {return(d.type == "1" ? "16" : "8");})
+                    .style("font-size", "8")
                     .style("opacity", function(d) {return(d.type == "1" ? "1" : "0.8");})
                     .style("display", function(d) {return(d.type == "1" ? "" : "none"); });               
          }

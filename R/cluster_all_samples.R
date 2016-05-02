@@ -26,7 +26,7 @@ get_stats_by_sample <- function(tab)
     
 }
 
-process_files_groups <- function(files, wd, col.names, num_clusters, num_samples, asinh.cofactor)
+process_files_groups <- function(files, wd, col.names, num_clusters, num_samples, asinh.cofactor, downsample.to)
 {
     setwd(wd)
     
@@ -69,6 +69,15 @@ process_files_groups <- function(files, wd, col.names, num_clusters, num_samples
         
         temp.tab <- as.matrix(temp.tab)
         temp.tab[temp.tab < 0] <- 0
+        
+        if(downsample.to > 0)
+        {
+            print(sprintf("Predownsampling to %d events", downsample.to))
+            x <- sample(1:nrow(temp.tab), size = downsample.to)
+            temp.tab <- temp.tab[x,]
+            temp.orig.data <- temp.orig.data[x,]
+        }
+        
         temp.tab <- as.data.frame(temp.tab, check.names = F)
         
         temp.tab <- data.frame(temp.tab, sample = f, check.names = F)
@@ -174,10 +183,14 @@ cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num
     return(files.list)
 }
 
-cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_clusters, num_samples, asinh.cofactor)
+cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_clusters, num_samples, asinh.cofactor, downsample.to)
 {
-    parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
-                       process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
+    lapply(files.list,
+                       process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
+                       asinh.cofactor = asinh.cofactor, downsample.to = downsample.to)
+    #parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
+    #                   process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
+    #                   asinh.cofactor = asinh.cofactor, downsample.to = downsample.to)
     return(files.list)
 }
 
