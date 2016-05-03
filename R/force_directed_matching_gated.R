@@ -79,6 +79,7 @@ load_attractors_from_gated_data <- function(dir, asinh.cofactor)
             colnames(tab) <- pData(parameters(fcs))$desc
         else
             colnames(tab) <- pData(parameters(fcs))$name
+		
         tab <- as.matrix(tab)
         tab[tab < 0] <- 0
         tab <- as.data.frame(tab)
