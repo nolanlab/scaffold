@@ -139,14 +139,15 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply, node.size.attr, min.no
     return(ret)
 }
 
-get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, sel.graph, active.sample, color.scaling)
+get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, 
+                                 sel.graph, active.sample, color.scaling, color.scale.limits = NULL)
 {
     G <- sc.data$graphs[[sel.graph]]
     if(sel.marker == "Default")
     {
         ret <- rep("#4F93DE", vcount(G))
         ret[V(G)$type == 1] <- "#FF7580"
-        return(ret)
+        return(list(color.vector = ret, color.scale.lim = NULL))
     }
     else
     {
@@ -156,23 +157,43 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, sel.graph, 
         a = "#E7E7E7"
         b = "#E71601"
         f <- colorRamp(c(a, b), interpolate = "linear")
-        #browser()
+        
         if(rel.to.sample != "Absolute")
         {
             rel.to.marker <- combine_marker_sample_name(sel.marker, rel.to.sample)
-            #v <- v / (get.vertex.attribute(G, rel.to.marker) + 0.001)
-            v <- v / (get.vertex.attribute(G, rel.to.marker))
+            v <- v - (get.vertex.attribute(G, rel.to.marker))
+            v <- v + abs(min(v, na.rm = T))
+            if(color.scaling == "global")
+            {
+                tab <- get.data.frame(G, what = "vertices")
+                m <- as.matrix(tab[, grep(sprintf("%s@", sel.marker), names(tab))])
+                m <- m - (get.vertex.attribute(G, rel.to.marker))
+                m <- apply(m, 2, function(x) {return(x + abs(min(x, na.rm = T)))})
+                norm.factor <- max(m, na.rm = T)
+            }
             v[is.infinite(v)] <- NA
-            print("Forcing local color scaling")
-            color.scaling <- "local"
         }
-        if(color.scaling  == "global")
-            norm.factor <- sc.data$dataset.statistics$max.marker.vals[[sel.marker]]
-        else if(color.scaling == "local")
+        else
+        {
+            if(color.scaling  == "global")
+                norm.factor <- sc.data$dataset.statistics$max.marker.vals[[sel.marker]]
+        }
+        
+        if(color.scaling == "local")
             norm.factor <- max(v, na.rm = T)
-        v <- f(v / norm.factor) #colorRamp needs an argument in the range [0, 1]
+        color.scale.lim <- list(min = min(v, na.rm = T), max = norm.factor)
+        if(!is.null(color.scale.limits))
+        {
+            v[v < color.scale.limits[1]] <- color.scale.limits[1]
+            v[v > color.scale.limits[2]] <- color.scale.limits[2]
+            v <- (v - min(v, na.rm = T)) / (max(v, na.rm = T) - min(v, na.rm = T))
+            v <- f(v)
+            
+        }
+        else
+            v <- f(v / norm.factor) #colorRamp needs an argument in the range [0, 1]
         v <- apply(v, 1, function(x) {sprintf("rgb(%s)", paste(round(x), collapse = ","))})
-        return(v)
+        return(list(color.vector = v, color.scale.lim = color.scale.lim))
     }
 }
 
@@ -184,6 +205,7 @@ get_numeric_vertex_attributes <- function(sc.data, sel.graph)
     d <- d[d$type == 2,]
     num <- sapply(d, function(x) {is.numeric(x) && !any(is.na(x))})
     v <- list.vertex.attributes(G)[num]
+    v <- v[grep("@", v, invert = T)]
     exclude <- c("x", "y", "cellType", "type", "groups", "r", "g", "b", "size", "DNA1", "DNA2", "BC1", "BC2", "BC3", "BC4", "BC5", "BC6", "Time", "Cell_length", "Cisplatin", "beadDist", "highest_scoring_edge")
     return(v[!(v %in% exclude)])
 }
