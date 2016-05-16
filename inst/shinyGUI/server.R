@@ -41,10 +41,8 @@ fluidPage(
         column(3,
     
             selectInput("graphui_dataset", "Choose a dataset:", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")), width = "100%"),
-            selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), width = "100%",
-                           options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
-            selectizeInput("graphui_active_sample", "Active sample", choices = c("All"), width = "100%",
-                        options = list(onChange = I("function() {var sel = d3.select('g'); if(!sel.empty()) Shiny.onInputChange('graphui_cur_transform', sel.attr('transform'))}"))),
+            selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), width = "100%"),
+            selectizeInput("graphui_active_sample", "Active sample", choices = c("All"), width = "100%"),
             selectInput("graphui_marker", "Nodes color:", choices = c("Default"), width = "100%"),
             selectInput("graphui_stats_relative_to", "Calculate stats relative to:", choices = c("Absolute"), width = "100%"),
             selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local"), width = "100%"),
@@ -501,30 +499,50 @@ shinyServer(function(input, output, session)
             updateSelectInput(session, "graphui_stats_relative_to", choices = c("Absolute", sample.names),
                               selected = input$graphui_stats_relative_to)
           })
-          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, input$graphui_cur_transform, node.size.attr, input$graphui_min_node_size,
+          return(scaffold:::get_graph(sc.data, input$graphui_selected_graph, node.size.attr, input$graphui_min_node_size,
                                       input$graphui_max_node_size, input$graphui_landmark_node_size))
         }
         else
             return(NULL)
     })
     
+    get_color <- reactive({
+        sel.marker <- input$graphui_marker
+        rel.to <- input$graphui_stats_relative_to
+        color.scaling <- input$graphui_color_scaling
+        color.scale.lim <- input$graphui_color_scale_lim
+        color.vector <- NULL
+        return(
+            isolate({
+                color.vector <- NULL
+                if(sel.marker != "")
+                {
+                    sc.data <- scaffold_data()
+                    if(!is.null(sc.data))
+                    {
+                        color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
+                                                                 input$graphui_active_sample, color.scaling, color.scale.limits = color.scale.lim)
+                        #print("Sending message")
+                        #session$sendCustomMessage(type = "color_nodes", color$color.vector)
+                        if(!is.null(color$color.scale.lim)) 
+                            updateSliderInput(session, "graphui_color_scale_lim", min = color$color.scale.lim$min,
+                                              max = color$color.scale.lim$max, step = 0.1)
+                        color.vector <- color$color.vector
+                    }
+                }
+                return(color.vector)
+            })
+        )
+    })
+    
+    
+    
     output$graphui_mainnet <- reactive({
         ret <- get_main_graph()
         if(!is.null(ret))
         {
-            isolate({
-                if(!is.null(input$graphui_marker))
-                {
-                    sel.marker <- input$graphui_marker
-                    rel.to <- input$graphui_stats_relative_to
-                    color <- scaffold:::get_color_for_marker(scaffold_data(), sel.marker, rel.to, 
-                                    input$graphui_selected_graph, input$graphui_active_sample, input$graphui_color_scaling)
-                    ret$color <- color$color.vector
-                    if(!is.null(color$color.scale.lim)) 
-                        updateSliderInput(session, "graphui_color_scale_lim", min = color$color.scale.lim$min,
-                                          max = color$color.scale.lim$max, step = 0.1)
-                }
-            })
+            ret$color <- get_color()
+            ret$trans_to_apply <- isolate({input$graphui_cur_transform})
         }
         return(ret)
     })
@@ -576,28 +594,6 @@ shinyServer(function(input, output, session)
     
   
     
-    observe({
-        if(is.null(input$graphui_marker)) return(NULL)
-        sel.marker <- input$graphui_marker
-        rel.to <- input$graphui_stats_relative_to
-        color.scaling <- input$graphui_color_scaling
-        color.scale.lim <- input$graphui_color_scale_lim
-        isolate({
-            if(sel.marker != "")
-            {
-                sc.data <- scaffold_data()
-                if(!is.null(sc.data))
-                {
-                    color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
-                                                             input$graphui_active_sample, color.scaling, color.scale.limits = color.scale.lim)
-                    session$sendCustomMessage(type = "color_nodes", color$color.vector)
-                    if(!is.null(color$color.scale.lim)) 
-                        updateSliderInput(session, "graphui_color_scale_lim", min = color$color.scale.lim$min,
-                                          max = color$color.scale.lim$max, step = 0.1)
-                }
-            }
-        })
-    })
     
     observe({
         if(!is.null(input$graphui_reset_colors) && input$graphui_reset_colors != 0)

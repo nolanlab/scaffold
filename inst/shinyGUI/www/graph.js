@@ -88,7 +88,9 @@ $.extend(networkOutputBinding, {
             
             function rescale()
             {
-                vis.attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
+                var transString = "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")";
+                vis.attr("transform", transString);
+                Shiny.onInputChange("graphui_cur_transform", transString);
             }
          
             var width = 1200;

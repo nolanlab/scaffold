@@ -102,7 +102,7 @@ export_clusters <- function(working.dir, sel.graph, sel.nodes)
     write.FCS(f, outname)
 }
 
-get_graph <- function(sc.data, sel.graph, trans_to_apply, node.size.attr, min.node.size, max.node.size, landmark.node.size)
+get_graph <- function(sc.data, sel.graph, node.size.attr, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
     edges <- data.frame(get.edgelist(G, names = F) - 1)
@@ -134,7 +134,7 @@ get_graph <- function(sc.data, sel.graph, trans_to_apply, node.size.attr, min.no
     if("edge_type" %in% list.edge.attributes(G)) #Old graphs did not have this
         edges[, "edge_type"] <- E(G)$edge_type
     #print(G)
-    ret <- list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, X = x, Y = y, trans_to_apply = trans_to_apply)
+    ret <- list(names = V(G)$Label, size = vertex.size / trans$scaling, type = V(G)$type, highest_scoring_edge = V(G)$highest_scoring_edge, X = x, Y = y)
     ret <- c(ret, edges = list(edges))
     return(ret)
 }
