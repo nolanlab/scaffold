@@ -46,6 +46,19 @@ fluidPage(
             selectInput("graphui_marker", "Nodes color:", choices = c("Default"), width = "100%"),
             selectInput("graphui_stats_relative_to", "Calculate stats relative to:", choices = c("Absolute"), width = "100%"),
             selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local"), width = "100%"),
+            h4("Colors for scale"),
+            fluidRow(
+                column(4,
+                    shinyjs::colourInput("graphui_color_min", "Min:", value = "#E7E7E7")
+                ),
+                column(4,
+                    shinyjs::colourInput("graphui_color_mid", "Mid:", value = "#E7E7E7")
+                ),
+                column(4,
+                    shinyjs::colourInput("graphui_color_max", "Max:", value = "#E71601")
+                )
+            ),
+            sliderInput("graphui_color_scale_mid", "Color scale midpoint", min = 0.0, max = 5.0, value = 2.5, round = -2, step = 0.1, sep = ""),
             sliderInput("graphui_color_scale_lim", "Color scale limits", min = 0.0, max = 5.0, value = c(0.0, 5.0), round = -2, step = 0.1, sep = ""),
             selectInput("graphui_node_size", "Nodes size:", choices = c("Proportional", "Default"), width = "100%"),
             numericInput("graphui_min_node_size", "Minimum node size", 2, min = 0, max = 1000),
@@ -511,7 +524,11 @@ shinyServer(function(input, output, session)
         rel.to <- input$graphui_stats_relative_to
         color.scaling <- input$graphui_color_scaling
         color.scale.lim <- input$graphui_color_scale_lim
+        color.scale.mid <- input$graphui_color_scale_mid
         color.vector <- NULL
+        min.color <- input$graphui_color_min
+        mid.color <- input$graphui_color_mid
+        max.color <- input$graphui_color_max
         return(
             isolate({
                 color.vector <- NULL
@@ -521,12 +538,17 @@ shinyServer(function(input, output, session)
                     if(!is.null(sc.data))
                     {
                         color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
-                                                                 input$graphui_active_sample, color.scaling, color.scale.limits = color.scale.lim)
+                                    input$graphui_active_sample, color.scaling, colors.to.interpolate = c(min.color, mid.color, max.color),  
+                                    color.scale.limits = color.scale.lim, color.scale.mid = color.scale.mid)
                         #print("Sending message")
                         #session$sendCustomMessage(type = "color_nodes", color$color.vector)
-                        if(!is.null(color$color.scale.lim)) 
+                        if(!is.null(color$color.scale.lim))
+                        {
                             updateSliderInput(session, "graphui_color_scale_lim", min = color$color.scale.lim$min,
                                               max = color$color.scale.lim$max, step = 0.1)
+                            updateSliderInput(session, "graphui_color_scale_mid", min = color$color.scale.lim$min,
+                                              max = color$color.scale.lim$max, step = 0.1)
+                        }
                         color.vector <- color$color.vector
                     }
                 }

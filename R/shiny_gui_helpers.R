@@ -140,7 +140,7 @@ get_graph <- function(sc.data, sel.graph, node.size.attr, min.node.size, max.nod
 }
 
 get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, 
-                                 sel.graph, active.sample, color.scaling, color.scale.limits = NULL)
+                                 sel.graph, active.sample, color.scaling, colors.to.interpolate, color.scale.limits = NULL, color.scale.mid = NULL)
 {
     G <- sc.data$graphs[[sel.graph]]
     if(sel.marker == "Default")
@@ -154,9 +154,7 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample,
         norm.factor <- NULL
         v <- get.vertex.attribute(G, combine_marker_sample_name(sel.marker, active.sample))
         
-        a = "#E7E7E7"
-        b = "#E71601"
-        f <- colorRamp(c(a, b), interpolate = "linear")
+        f <- colorRamp(colors.to.interpolate, interpolate = "linear")
         
         if(rel.to.sample != "Absolute")
         {
@@ -186,7 +184,8 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample,
         {
             v[v < color.scale.limits[1]] <- color.scale.limits[1]
             v[v > color.scale.limits[2]] <- color.scale.limits[2]
-            v <- (v - min(v, na.rm = T)) / (max(v, na.rm = T) - min(v, na.rm = T))
+            #v <- (v - min(v, na.rm = T)) / (max(v, na.rm = T) - min(v, na.rm = T))
+            v <- scales::rescale_mid(v, mid = color.scale.mid)
             v <- f(v)
             
         }
