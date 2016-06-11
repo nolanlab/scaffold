@@ -519,36 +519,67 @@ shinyServer(function(input, output, session)
             return(NULL)
     })
     
-    get_color <- reactive({
+    
+    observe({
+        #This code only updates the color scales
+        sc.data <- scaffold_data()
+        if(is.null(sc.data) || is.null(get_main_graph())) return(NULL)
         sel.marker <- input$graphui_marker
         rel.to <- input$graphui_stats_relative_to
         color.scaling <- input$graphui_color_scaling
-        color.scale.lim <- input$graphui_color_scale_lim
-        color.scale.mid <- input$graphui_color_scale_mid
-        color.vector <- NULL
+        isolate({
+            color <- NULL
+            if(sel.marker != "")
+            {
+                #Colors are not really important here, only included because they need to be passed to the function
+                min.color <- input$graphui_color_min
+                mid.color <- input$graphui_color_mid
+                max.color <- input$graphui_color_max
+                color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
+                                                         input$graphui_active_sample, color.scaling, colors.to.interpolate = c(min.color, mid.color, max.color))
+                if(!is.null(color$color.scale.lim))
+                {
+                    updateSliderInput(session, "graphui_color_scale_lim", min = color$color.scale.lim$min,
+                                      max = color$color.scale.lim$max, step = 0.1, value = c(color$color.scale.lim$min, color$color.scale.lim$max))
+                    updateSliderInput(session, "graphui_color_scale_mid", min = color$color.scale.lim$min,
+                                      max = color$color.scale.lim$max, step = 0.1, value = mean(c(color$color.scale.lim$min, color$color.scale.lim$max)))
+                }
+            }
+        })
+    })
+    
+    
+    graphui_reactive_values <- reactiveValues(color.scale.lim = NULL, color.scale.mid = NULL)
+    
+    observe({
+        graphui_reactive_values$color.scale.lim <- input$graphui_color_scale_lim
+        graphui_reactive_values$color.scale.mid <- input$graphui_color_scale_mid
+    })
+    
+    
+    get_color <- reactive({
+        #This code does the actual coloring
+        color.scale.lim <- graphui_reactive_values$color.scale.lim
+        color.scale.mid <- graphui_reactive_values$color.scale.mid
         min.color <- input$graphui_color_min
         mid.color <- input$graphui_color_mid
         max.color <- input$graphui_color_max
         return(
             isolate({
                 color.vector <- NULL
+                sel.marker <- input$graphui_marker
+                active.sample <- input$graphui_active_sample
+                rel.to <- input$graphui_stats_relative_to
+                color.scaling <- input$graphui_color_scaling
+                
                 if(sel.marker != "")
                 {
                     sc.data <- scaffold_data()
                     if(!is.null(sc.data))
                     {
                         color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
-                                    input$graphui_active_sample, color.scaling, colors.to.interpolate = c(min.color, mid.color, max.color),  
+                                    active.sample, color.scaling, colors.to.interpolate = c(min.color, mid.color, max.color),  
                                     color.scale.limits = color.scale.lim, color.scale.mid = color.scale.mid)
-                        #print("Sending message")
-                        #session$sendCustomMessage(type = "color_nodes", color$color.vector)
-                        if(!is.null(color$color.scale.lim))
-                        {
-                            updateSliderInput(session, "graphui_color_scale_lim", min = color$color.scale.lim$min,
-                                              max = color$color.scale.lim$max, step = 0.1)
-                            updateSliderInput(session, "graphui_color_scale_mid", min = color$color.scale.lim$min,
-                                              max = color$color.scale.lim$max, step = 0.1)
-                        }
                         color.vector <- color$color.vector
                     }
                 }
