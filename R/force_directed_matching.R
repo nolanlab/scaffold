@@ -161,8 +161,8 @@ add_vertices_to_attractors_graph <- function(G, tab.clustered, tab.median, col.n
 	
 	V(G)[1:num.vertices]$type <- 1 #attractor
 	V(G)[(num.vertices + 1):vcount(G)]$type <- 2 #cell
-
-    for(i in names(tab.clustered))
+    
+	for(i in names(tab.clustered))
 		G <- set.vertex.attribute(G, name = i, index = (num.vertices + 1):vcount(G), value = tab.clustered[, i])
 	
 	G <- set_visual_attributes(G)

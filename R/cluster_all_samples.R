@@ -72,8 +72,17 @@ process_files_groups <- function(files, wd, col.names, num_clusters, num_samples
         
         if(downsample.to > 0)
         {
-            print(sprintf("Predownsampling to %d events", downsample.to))
-            x <- sample(1:nrow(temp.tab), size = downsample.to)
+            x <- NULL
+            if(nrow(temp.tab) <= downsample.to)
+            {
+                print("Number of events smaller than downsampling target, taking all events")
+                x <- 1:nrow(temp.tab)
+            }
+            else
+            {
+                print(sprintf("Predownsampling to %d events", downsample.to))
+                x <- sample(1:nrow(temp.tab), size = downsample.to)
+            }
             temp.tab <- temp.tab[x,]
             temp.orig.data <- temp.orig.data[x,]
         }
