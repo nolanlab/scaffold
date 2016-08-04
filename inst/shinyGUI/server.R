@@ -24,6 +24,23 @@ busy_dialog <- function(start.string, end.string)
 }
 
 
+
+render_editing_ui <- function(working.directory, ...) {renderUI({
+    fluidPage(
+        fluidRow(
+            column(6,
+                   selectInput("editingui_scaffold_file", "Choose a Scaffold file:", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")), width = "100%"),
+                   selectInput("editingui_active_graph", "Active graph:", choices = c("All"), width = "100%"),
+                   selectInput("editingui_columns_to_remove", "Columns to remove:", choices = c(""), multiple = T, width = "100%"),
+                   selectInput("editingui_columns_to_add", "Columns to add:", choices = c("", list.files(path = working.directory, pattern = "*.txt$")), width = "100%"),
+                   actionButton("editingui_process", "Process")
+            )
+        )
+    )
+    
+    
+})}
+
 render_graph_ui <- function(working.directory, ...){renderUI({
 fluidPage(
     fluidRow(
@@ -274,6 +291,50 @@ shinyServer(function(input, output, session)
     output$analysisUI <- render_analysis_ui(working.directory, input, output, session)
     output$clusteringUI <- render_clustering_ui(working.directory, input, output, session)
     output$mappingUI <- render_mapping_ui(working.directory, input, output, session)
+    output$editingUI <- render_editing_ui(working.directory, input, output, session)
+    
+    
+    #EditingUI functions
+    #selectInput("editingui_scaffold_file", "Choose a Scaffold file:", choices = c("", list.files(path = working.directory, pattern = "*.scaffold$")), width = "100%"),
+    #selectInput("editingui_active_graph", "Active graph:", choices = c("All"), width = "100%"),
+    #selectInput("editingui_columns_to_remove", "Columns to remove:", choices = c(""), multiple = T, width = "100%"),
+    #selectInput("editingui_columns_to_add", "Columns to add:", choices = c("", list.files(path = working.directory, pattern = "*.txt$")), width = "100%"),
+    #actionButton("editingui_process", "Process")
+    
+    
+    
+    editingui_scaffold_data <- reactive({
+        print("Loading editing data")
+        file_name <- input$editingui_scaffold_file
+        if(!is.null(file_name) && file_name != "")
+        {
+            file_name <- file.path(working.directory, file_name)
+            data <- scaffold:::my_load(file_name)
+            updateSelectInput(session, "editingui_active_graph", choices = c("All", names(data$graphs)))
+            return(data)
+        }
+        else
+            return(NULL)
+    })
+    
+    observe({
+        data <- editingui_scaffold_data()
+        if(!is.null(data))
+        {
+            G <- NULL
+            if(input$editingui_active_graph == "All")
+                G <- data$graphs[[1]]
+            else
+                G <- data$graphs[[input$editingui_active_graph]]
+            updateSelectInput(session, "editingui_columns_to_remove", choices = list.vertex.attributes(G))
+        }
+    })
+    
+    
+    observeEvent(input$editingui_process, {
+        scaffold:::process_scaffold_edits(working.directory, input$editingui_scaffold_file, editingui_scaffold_data(),
+            input$editingui_active_graph, input$editingui_columns_to_add, input$editingui_columns_to_remove)
+    })
     
     #MappingUI functions
     

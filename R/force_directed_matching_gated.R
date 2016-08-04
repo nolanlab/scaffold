@@ -162,14 +162,14 @@ get_dataset_statistics <- function(dataset)
     for(G in graphs)
     {
         V(G)$popsize.relative <- V(G)$popsize / sum(V(G)$popsize, na.rm = T)
-        tab <- get_vertex_table(G)
+        tab <- get.data.frame(G, what = "vertices")
         max.vals <- sapply(tab, function(x) {if(is.numeric(x)) return(max(x, na.rm  =T))})
         max.vals <- max.vals[!sapply(max.vals, is.null)]
         for(i in 1:length(max.vals))
         {
             var.name <- names(max.vals)[i]
             if(!(var.name %in% names(ret)) || max.vals[[i]] > ret[[var.name]])
-            ret[var.name] <- max.vals[i]
+                ret[var.name] <- max.vals[i]
         }
     }
     return(list(max.marker.vals = ret))
