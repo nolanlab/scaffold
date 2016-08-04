@@ -33,6 +33,7 @@ render_editing_ui <- function(working.directory, ...) {renderUI({
                    selectInput("editingui_active_graph", "Active graph:", choices = c("All"), width = "100%"),
                    selectInput("editingui_columns_to_remove", "Columns to remove:", choices = c(""), multiple = T, width = "100%"),
                    selectInput("editingui_columns_to_add", "Columns to add:", choices = c("", list.files(path = working.directory, pattern = "*.txt$")), width = "100%"),
+                   verbatimTextOutput("editingui_status"),
                    actionButton("editingui_process", "Process")
             )
         )
@@ -331,7 +332,7 @@ shinyServer(function(input, output, session)
     })
     
     
-    observeEvent(input$editingui_process, {
+    output$editingui_status <- eventReactive(input$editingui_process, {
         scaffold:::process_scaffold_edits(working.directory, input$editingui_scaffold_file, editingui_scaffold_data(),
             input$editingui_active_graph, input$editingui_columns_to_add, input$editingui_columns_to_remove)
     })

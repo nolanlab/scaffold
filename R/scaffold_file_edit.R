@@ -25,4 +25,5 @@ process_scaffold_edits <- function(working.directory, sc.file.name, sc.data, act
     out.name <- tempfile(pattern = sc.file.name, tmpdir = working.directory, fileext = ".scaffold")
     sc.data$dataset.statistics <- scaffold:::get_dataset_statistics(sc.data)
     scaffold:::my_save(sc.data, out.name)
+    return(out.name)
 }
