@@ -176,6 +176,28 @@ get_dataset_statistics <- function(dataset)
     
 }
 
+get_complete_statistics <- function(dataset)
+{
+    graph.names <- names(dataset$graphs)
+    ret <- NULL
+    
+    for(g.name in graph.names)
+    {
+        G <- dataset$graphs[[g.name]]
+        tab <- get.data.frame(G, what = "vertices")
+        markers <- grep("@", names(tab), value = T)
+        markers <- unique(sapply(strsplit(markers, "@"), function(x) {return(x[[1]])}))
+        
+        marker.lims <- sapply(markers, function(x, tab) {
+            m <- as.matrix(tab[, grep(x, names(tab))])
+            return(list(max = max(m, na.rm = T), min = min(m, na.rm = T)))
+        }, tab = tab, simplify = F)
+        
+        ret <- c(ret, setNames(list(marker.lims), g.name))
+    }
+    return(ret)
+}
+
 
 
 add_missing_columns <- function(m, col.names, fill.data)

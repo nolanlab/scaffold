@@ -139,6 +139,17 @@ get_graph <- function(sc.data, sel.graph, node.size.attr, min.node.size, max.nod
     return(ret)
 }
 
+
+get_limits_for_marker <- function(sc.data, sel.graph, active.sample, sel.marker, color.scaling)
+{
+    if(color.scaling == "local")
+    {
+        v <- combine_marker_sample_name()
+        
+    }
+    
+}
+
 get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, 
                                  sel.graph, active.sample, color.scaling, colors.to.interpolate, color.scale.limits = NULL, color.scale.mid = NULL)
 {
