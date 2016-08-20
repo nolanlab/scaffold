@@ -16,7 +16,6 @@ process_scaffold_edits <- function(working.directory, sc.file.name, sc.data, act
         
         for(x in cols.to.remove)
             G <- remove.vertex.attribute(G, x)
-        
         for(x in names(cols.to.add))
             G <- set.vertex.attribute(G, x, value = c(rep(NA, num.landmarks), cols.to.add[,x]))
         sc.data$graphs[[graph.name]] <- G

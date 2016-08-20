@@ -151,7 +151,7 @@ get_limits_for_marker <- function(sc.data, sel.graph, active.sample, sel.marker,
 }
 
 get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, 
-                                 sel.graph, active.sample, color.scaling, colors.to.interpolate, color.scale.limits = NULL, color.scale.mid = NULL)
+                                 sel.graph, active.sample, color.scaling, colors.to.interpolate, color.under, color.over, color.scale.limits = NULL, color.scale.mid = NULL)
 {
     G <- sc.data$graphs[[sel.graph]]
     if(sel.marker == "Default")
@@ -162,7 +162,6 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample,
     }
     else
     {
-        norm.factor <- NULL
         v <- get.vertex.attribute(G, combine_marker_sample_name(sel.marker, active.sample))
         
         f <- colorRamp(colors.to.interpolate, interpolate = "linear")
@@ -171,38 +170,33 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample,
         {
             rel.to.marker <- combine_marker_sample_name(sel.marker, rel.to.sample)
             v <- v - (get.vertex.attribute(G, rel.to.marker))
-            v <- v + abs(min(v, na.rm = T))
-            if(color.scaling == "global")
-            {
-                tab <- get.data.frame(G, what = "vertices")
-                m <- as.matrix(tab[, grep(sprintf("%s@", sel.marker), names(tab))])
-                m <- m - (get.vertex.attribute(G, rel.to.marker))
-                m <- apply(m, 2, function(x) {return(x + abs(min(x, na.rm = T)))})
-                norm.factor <- max(m, na.rm = T)
-            }
+            #v <- v + abs(min(v, na.rm = T))
             v[is.infinite(v)] <- NA
         }
-        else
-        {
-            if(color.scaling  == "global")
-                norm.factor <- sc.data$dataset.statistics$max.marker.vals[[sel.marker]]
-        }
-        
+        color.scale.lim <- NULL
         if(color.scaling == "local")
-            norm.factor <- max(v, na.rm = T)
-        color.scale.lim <- list(min = min(v, na.rm = T), max = norm.factor)
+            color.scale.lim <- list(min = min(v, na.rm = T), max = max(v, na.rm = T))
         if(!is.null(color.scale.limits))
         {
-            v[v < color.scale.limits[1]] <- color.scale.limits[1]
-            v[v > color.scale.limits[2]] <- color.scale.limits[2]
-            #v <- (v - min(v, na.rm = T)) / (max(v, na.rm = T) - min(v, na.rm = T))
-            v <- scales::rescale_mid(v, mid = color.scale.mid)
+            under <- v < color.scale.limits[1]
+            over <- v > color.scale.limits[2]
+            v[under] <- color.scale.limits[1]
+            v[over] <- color.scale.limits[2]
+            if(is.null(color.scale.mid))
+                v <-  scales::rescale(v)
+            else
+                v <- scales::rescale_mid(v, mid = color.scale.mid)
             v <- f(v)
+            v <- apply(v, 1, function(x) {sprintf("rgb(%s)", paste(round(x), collapse = ","))})
+            v[under] <- sprintf("rgb(%s)", paste(col2rgb(color.under), collapse = ","))
+            v[over] <- sprintf("rgb(%s)", paste(col2rgb(color.over), collapse = ","))
             
         }
         else
-            v <- f(v / norm.factor) #colorRamp needs an argument in the range [0, 1]
-        v <- apply(v, 1, function(x) {sprintf("rgb(%s)", paste(round(x), collapse = ","))})
+        {
+            v <- f(scales::rescale(v)) #colorRamp needs an argument in the range [0, 1]
+            v <- apply(v, 1, function(x) {sprintf("rgb(%s)", paste(round(x), collapse = ","))})
+        }
         return(list(color.vector = v, color.scale.lim = color.scale.lim))
     }
 }
