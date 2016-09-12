@@ -62,7 +62,14 @@ fluidPage(
             selectizeInput("graphui_selected_graph", "Choose a graph:", choices = c(""), width = "100%"),
             selectizeInput("graphui_active_sample", "Active sample", choices = c("All"), width = "100%"),
             selectInput("graphui_marker", "Nodes color:", choices = c("Default"), width = "100%"),
-            selectInput("graphui_stats_relative_to", "Calculate stats relative to:", choices = c("Absolute"), width = "100%"),
+            fluidRow(
+                column(6,
+                    selectInput("graphui_stats_type", "Stats type", choices = c("Ratio", "Difference"))
+                ),
+                column(6,
+                    selectInput("graphui_stats_relative_to", "Stats relative to:", choices = c("Absolute"), width = "100%")
+                )
+            ),
             selectInput("graphui_color_scaling", "Color scaling:", choices = c("global", "local"), width = "100%"),
             h4("Colors for scale"),
             selectInput("graphui_color_number", "Number of colors", choices = c(2,3)),
@@ -634,6 +641,7 @@ shinyServer(function(input, output, session)
         sel.marker <- input$graphui_marker
         rel.to <- input$graphui_stats_relative_to
         color.scaling <- input$graphui_color_scaling
+        stats.type <- input$graphui_stats_type
         isolate({
             color <- NULL
             if(sel.marker != "")
@@ -645,7 +653,7 @@ shinyServer(function(input, output, session)
                 under.color <- input$graphui_color_under
                 over.color <- input$graphui_color_over
                 color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
-                                                         input$graphui_active_sample, color.scaling, colors.to.interpolate = c(min.color, mid.color, max.color),
+                                                         input$graphui_active_sample, color.scaling, stats.type, colors.to.interpolate = c(min.color, mid.color, max.color),
                                                          under.color, over.color)
                 if(!is.null(color$color.scale.lim) 
                     && !(is.null(color.scaling)) && color.scaling == "local")
@@ -686,6 +694,7 @@ shinyServer(function(input, output, session)
                 active.sample <- input$graphui_active_sample
                 rel.to <- input$graphui_stats_relative_to
                 color.scaling <- input$graphui_color_scaling
+                stats.type <- input$graphui_stats_type
                 
                 if(sel.marker != "")
                 {
@@ -693,7 +702,7 @@ shinyServer(function(input, output, session)
                     if(!is.null(sc.data))
                     {
                         color <- scaffold:::get_color_for_marker(sc.data, sel.marker, rel.to, input$graphui_selected_graph, 
-                                    active.sample, color.scaling, colors.to.interpolate = colors.to.interpolate, under.color, over.color,
+                                    active.sample, color.scaling, stats.type, colors.to.interpolate = colors.to.interpolate, under.color, over.color,
                                     color.scale.limits = color.scale.lim, color.scale.mid = color.scale.mid)
                         color.vector <- color$color.vector
                     }

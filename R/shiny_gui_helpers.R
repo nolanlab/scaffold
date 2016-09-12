@@ -150,8 +150,8 @@ get_limits_for_marker <- function(sc.data, sel.graph, active.sample, sel.marker,
     
 }
 
-get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, 
-                                 sel.graph, active.sample, color.scaling, colors.to.interpolate, color.under, color.over, color.scale.limits = NULL, color.scale.mid = NULL)
+get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample, sel.graph, active.sample, color.scaling, 
+                                 stats.type, colors.to.interpolate, color.under, color.over, color.scale.limits = NULL, color.scale.mid = NULL)
 {
     G <- sc.data$graphs[[sel.graph]]
     if(sel.marker == "Default")
@@ -169,8 +169,10 @@ get_color_for_marker <- function(sc.data, sel.marker, rel.to.sample,
         if(rel.to.sample != "Absolute")
         {
             rel.to.marker <- combine_marker_sample_name(sel.marker, rel.to.sample)
-            v <- v - (get.vertex.attribute(G, rel.to.marker))
-            #v <- v + abs(min(v, na.rm = T))
+            if(stats.type == "Difference")
+                v <- v - (get.vertex.attribute(G, rel.to.marker))
+            else if(stats.type == "Ratio")
+                v <- v / (get.vertex.attribute(G, rel.to.marker))
             v[is.infinite(v)] <- NA
         }
         color.scale.lim <- NULL
@@ -266,3 +268,4 @@ get_fcs_col_names <- function(working.directory, f.name)
 
 
 
+    
