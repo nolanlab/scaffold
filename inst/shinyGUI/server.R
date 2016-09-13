@@ -329,7 +329,10 @@ render_mapping_ui <- function(working.directory, ...){renderUI({
 shinyServer(function(input, output, session)
 {
     options(shiny.error=traceback) 
-    working.directory <- dirname(file.choose())
+    if(exists(".ScaffoldWorkingDir"))
+        working.directory <- .ScaffoldWorkingDir
+    else
+        working.directory <- dirname(file.choose())
     output$graphUI <- render_graph_ui(working.directory, input, output, session)
     output$analysisUI <- render_analysis_ui(working.directory, input, output, session)
     output$clusteringUI <- render_clustering_ui(working.directory, input, output, session)
