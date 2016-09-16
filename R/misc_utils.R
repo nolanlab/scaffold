@@ -11,3 +11,15 @@ check_names <- function(dir.name, col.names)
     print(paste(s, col.names[!(col.names %in% names(tab))]))
   }
 }
+
+#Get the subset of columns that are common to multiple files
+get_common_columns <- function(working.dir, files.list)
+{
+    l <- list()
+    for(f in files.list)
+    {
+        temp <- read.table(file.path(working.dir, f), header = T, sep = "\t", check.names = F, quote = "")
+        l <- c(l, list(names(temp)))
+    }
+    return(Reduce(intersect, l))
+}
