@@ -26,7 +26,7 @@ get_stats_by_sample <- function(tab)
     
 }
 
-process_files_groups <- function(files, wd, col.names, num_clusters, num_samples, asinh.cofactor, downsample.to)
+process_files_groups <- function(files, wd, col.names, num_clusters, num_samples, asinh.cofactor, downsample.to, output_type, output.dir)
 {
     setwd(wd)
     
@@ -87,10 +87,10 @@ process_files_groups <- function(files, wd, col.names, num_clusters, num_samples
             temp.orig.data <- temp.orig.data[x,]
         }
         
-        temp.tab <- as.data.frame(temp.tab, check.names = F)
+        temp.tab <- as.data.frame(temp.tab, check.names = F, stringsAsFactors = F)
         
-        temp.tab <- data.frame(temp.tab, sample = f, check.names = F)
-        temp.orig.data <- data.frame(temp.orig.data, sample = f, check.names = F)
+        temp.tab <- data.frame(temp.tab, sample = f, check.names = F, stringsAsFactors = F)
+        temp.orig.data <- data.frame(temp.orig.data, sample = f, check.names = F, stringsAsFactors = F)
         tab <- rbind(tab, temp.tab)
         orig.data <- rbind(orig.data, temp.orig.data)
     }
@@ -99,26 +99,21 @@ process_files_groups <- function(files, wd, col.names, num_clusters, num_samples
     colnames(m) <- gsub("groups", "cellType", colnames(m))
     orig.data <- cbind(orig.data, cellType = m[, "cellType"])
     
-    #tab.medians <- ddply(m, ~cellType * sample, colwise(median))
-    #pop.size <- ddply(m, ~cellType * sample, nrow)
-    #temp <- data.frame(tab.medians, popsize = pop.size[tab.medians$cellType, "V1"], check.names = F, stringsAsFactors = FALSE)
-    
     temp <- get_stats_by_sample(m)
     
-    colnames(temp) <- gsub("^X", "", colnames(temp))
+    #colnames(temp) <- gsub("^X", "", colnames(temp))
     m <- data.frame(m, check.names = F)
     orig.data <- data.frame(orig.data, stringsAsFactors = FALSE, check.names = FALSE)
-    colnames(orig.data) <- gsub("^X", "", colnames(orig.data))
-    colnames(m) <- gsub("^X", "", colnames(m))
+    #colnames(orig.data) <- gsub("^X", "", colnames(orig.data))
+    #colnames(m) <- gsub("^X", "", colnames(m))
     
-    write.table(temp, paste(f, ".clustered.txt", sep = ""), row.names = F, sep = "\t", quote = F)
-    my_save(m, paste(f, ".clustered.all_events.RData", sep = ""))
+    write_clustering_output(f, temp, m, output_type, output.dir)
     #my_save(orig.data, paste(f, ".clustered.all_events.orig_data.RData", sep = ""))
 }
 
 
 
-process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofactor)
+process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofactor, output_type, output.dir)
 {
     setwd(wd)
     
@@ -173,33 +168,70 @@ process_file <- function(f, wd, col.names, num_clusters, num_samples, asinh.cofa
     
     temp <- data.frame(tab.medians, sample = f, popsize = pop.size[tab.medians$cellType, "V1"], check.names = F, stringsAsFactors = FALSE)
     
-    colnames(temp) <- gsub("^X", "", colnames(temp))
+    #colnames(temp) <- gsub("^X", "", colnames(temp))
     m <- data.frame(m, check.names = F)
     orig.data <- data.frame(orig.data, stringsAsFactors = FALSE, check.names = FALSE)
-    colnames(orig.data) <- gsub("^X", "", colnames(orig.data))
-    colnames(m) <- gsub("^X", "", colnames(m))
+    #colnames(orig.data) <- gsub("^X", "", colnames(orig.data))
+    #colnames(m) <- gsub("^X", "", colnames(m))
     
-    write.table(temp, paste(f, ".clustered.txt", sep = ""), row.names = F, sep = "\t", quote = F)
-    my_save(m, paste(f, ".clustered.all_events.RData", sep = ""))
+    
+    write_clustering_output(f, temp, m, output_type, output.dir)
     #my_save(orig.data, paste(f, ".clustered.all_events.orig_data.RData", sep = ""))
 }
 
-cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num_samples, asinh.cofactor)
+write_clustering_output <- function(base.name, tab.medians, clustered.data, output.type, output.dir)
+{
+    if(output.type == "legacy")
+    {
+        write.table(tab.medians, paste(base.name, ".clustered.txt", sep = ""), row.names = F, sep = "\t", quote = F)
+        my_save(clustered.data, paste(base.name, ".clustered.all_events.RData", sep = ""))
+    }
+    else if(output.type == "directory")
+    {
+        clusters.dir <- "clusters"
+        clustered.data.dir <- "clustered.data"
+        txt.file.name <- paste(base.name, ".clustered.txt", sep = "")
+        full.path <- file.path(output.dir, clusters.dir, clustered.data.dir, txt.file.name)
+        dir.create(full.path, recursive = T)
+        
+        write.table(tab.medians, file.path(output.dir, clusters.dir, txt.file.name, sep = ""), 
+                    row.names = F, sep = "\t", quote = F)
+        ddply(clustered.data, ~cellType, function(x) {
+            saveRDS(x, file = file.path(full.path, sprintf("cluster_%d.RData", x$cellType[1])))
+        })
+    }
+}
+
+#' @export
+cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num_samples, asinh.cofactor, output_type = "legacy")
 {
     files.list <- list.files(path = wd, pattern = "*.fcs$")
+    output.dir <- NULL
+    if(output_type == "directory")
+        output.dir <- sprintf("%s.scaffold", gsub(".fcs$", "", files.list[[1]]))
+    
     parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
-             process_file, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, asinh.cofactor = asinh.cofactor)
+             process_file, wd = wd, col.names = col.names, num_clusters = num_clusters, 
+             num_samples = num_samples, asinh.cofactor = asinh.cofactor, output_type = output_type, output.dir = output.dir)
     return(files.list)
 }
 
-cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_clusters, num_samples, asinh.cofactor, downsample.to)
+#' @export
+cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_clusters, num_samples, 
+                                     asinh.cofactor, downsample.to, output_type = "legacy")
 {
-    lapply(files.list,
-                       process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
-                       asinh.cofactor = asinh.cofactor, downsample.to = downsample.to)
-    #parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
+    #lapply(files.list,
     #                   process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
     #                   asinh.cofactor = asinh.cofactor, downsample.to = downsample.to)
+    
+    output.dir <- NULL
+    if(output_type == "directory")
+        output.dir <- sprintf("%s.scaffold", gsub(".fcs$", "", names(files.list)[1]))
+    
+    parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
+                       process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
+                       asinh.cofactor = asinh.cofactor, downsample.to = downsample.to, output_type = output_type, output.dir = output.dir)
+    
     return(files.list)
 }
 

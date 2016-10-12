@@ -20,3 +20,4 @@ Imports:
     grDevices,
     parallel
 LazyData: true
+RoxygenNote: 5.0.1
