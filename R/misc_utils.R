@@ -3,7 +3,7 @@ check_names <- function(dir.name, col.names)
   for(f in list.files(path = dir.name, pattern = "*.fcs", full.names = T))
   {
     fcs.file <- read.FCS(f)
-    tab <- convert_fcs(fcs.file)
+    tab <- convert_fcs(fcs.file, asinh.cofactor = 5)
     colnames(tab) <- pData(parameters(fcs.file))$desc
     
     
