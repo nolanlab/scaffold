@@ -94,7 +94,7 @@ Switch to the "Map exploration" tab by using the top navigation bar. This is a r
 - **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
 - **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
 
-You can interact with the graph using the mouse as follows:
+You can interact with the graph using the mouse as follows (node selections are used for plotting and exporting data, see below):
 
 - Scrolling: zoom in/out. 
 - Left click + drag: panning
@@ -113,7 +113,7 @@ The table to the right of the graph shows statistics about either the entire gra
 - **Reset graph position**: this button will reset the graph to its initial position, which is intended to display most of the nodes in a single image
 - **Toggle landmark labels**: toggle the display of the landmark labels on/off
 - **Toggle cluster labels**: toggle the display of the cluster labels on/off
-- **Export selected clusters**: click this button to export the events in the selected clusters in a separate FCS file. For this to work, the original RData files corresponding to the clustered files in use must be located in the working directory.
+- **Export selected clusters**: click this button to export the events in the selected clusters in a separate FCS file. For this to work, the original RData files corresponding to the clustered files in use must be located in the working directory. A new FCS file will be created in the working directory, with a name starting with *scaffold_export*, and ending with a random string of alpha-numeric characters, to prevent naming conflicts.
 
 One of the most useful ways to inspect a cluster is to plot the expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. The plot generated with the options below will therefore contain all the selected clusters, and all the landmarks these clusters are connected to.
 
