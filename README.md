@@ -78,7 +78,12 @@ The gated populations have to be provided as single FCS files (one for each popu
 
 *WhateverYouWant*_B cells.fcs
 
-If you check the "Add inter-cluster connections" checkbox your graph will also include connections between the unsupervised clusters (Blue nodes). The default is for the unsupervised clusters (Blue nodes) to be connected only to the landmark populations (Red nodes). Please note that this feature is still experimental.
+This is a rundown of the different options:
+
+- **Running mode**: keep this as "Gated"
+- **Edge weight influence**: this option controls the importance assigned to the edge weights in constructing the force directed layout, and is related to the workings of the ForceAtlas2 algorithm. *Proportional* means that edge weight is proportional to the number of parameters used to construct the graph, *Fixed* will allow you to select a specific value explicitly
+- **Add inter-cluster connections**: if this is checked, the graph will also include connections between the unsupervised clusters (Blue nodes). The default is for the unsupervised clusters (Blue nodes) to be connected only to the landmark populations (Red nodes). It is **highly recommended** to check this option.  
+- **asinh cofatctor**: the cofactor used for the asinh transformation. The recommended values are 5 for mass cytometry data, and 150 for fluorescence-based flow cytometry.
 
 After you have specified all the parameters you can click on the "Start analysis" button. The run should be pretty quick and it will create a single .scaffold file with the same name of the dataset that you have used as reference. This is a single self-contained bundle that contains everything you need to browse the data. You can move it in any folder you want and also share with other users, without having to share any of the original files.
 
@@ -86,19 +91,21 @@ After you have specified all the parameters you can click on the "Start analysis
 
 Switch to the "Map exploration" tab by using the top navigation bar. This is a rundown of the operation of the different controls:
 
-1. **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
-2. **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
-3. **Nodes color**: use this dataset to color the nodes according to the expression of a specific marker, or with "Default" colors (unsupervised clusters:Blue, landmark populations:Red).
-4. **Color scaling**: select whether you want the color scale of the nodes to be calculated globally for the whole dataset, or locally for the currently visualized graph.
-5. **Nodes size**: select whether you want the size of the nodes to be proportional to the number of cells in each cluster. Presently the size scale is calculated across the entire dataset.
-6. **Display edges**: select whether you want to display all the edges in the graph, or only the highest scoring one for each cluster. Even you if you are displaying all the edges you can visualize the highest scoring one for an individual cluster by hovering the mouse over the node.
-7. **Minimum / Maximum / Landmark node size**: the minimum and maximum size for the cluster (blue) and landmark (red) nodes
-8. **Display edges**: whether to display all the edges, only the highest scoring ones (i.e. for each cluster node, only the highest scoring connection), only the ones between the clusters themselves, or only the ones between clusters and landmarks.
-9. **Reset graph position**: this button will reset the graph to its initial position, which is intended to display most of the nodes in a single image
-10. **Toggle landmark labels**: toggle the display of the landmark labels on/off
-11. **Toggle cluster labels**: toggle the display of the cluster labels on/off
-12. **Export selected clusters**: click this button to export the events in the selected clusters in a separate FCS file. For this to work, the original RData files corresponding to the clustered files in use must be located in the working directory.
-12. **Markers to plot in cluster view**: one of the most useful ways to inspect a cluster is to plot the distribution of expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. Using this box you can select the markers you want to inspect. To generate the actual plot simply click on a cluster node. A plot of the markers distributions will then appear in the lower half of the window. The figure will contains multiple subplots, one for each marker. Each subplot consists of a distribution of expression values for the cells in the cluster and the cells in all the landmark nodes the cluster is connected to. The different distribution can be distinguished by line color, with a legend to the right of each plot.
+- **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
+- **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
+- **Nodes color**: use this dataset to color the nodes according to the expression of a specific marker, or with "Default" colors (unsupervised clusters:Blue, landmark populations:Red).
+- **Color scaling**: select whether you want the color scale of the nodes to be calculated globally for the whole dataset, or locally for the currently visualized graph.
+- **Nodes size**: select whether you want the size of the nodes to be proportional to the number of cells in each cluster. Presently the size scale is calculated across the entire dataset.
+- **Display edges**: select whether you want to display all the edges in the graph, or only the highest scoring one for each cluster. Even you if you are displaying all the edges you can visualize the highest scoring one for an individual cluster by hovering the mouse over the node.
+- **Minimum / Maximum / Landmark node size**: the minimum and maximum size for the cluster (blue) and landmark (red) nodes
+- **Display edges**: whether to display all the edges, only the highest scoring ones (i.e. for each cluster node, only the highest scoring connection), only the ones between the clusters themselves, or only the ones between clusters and landmarks.
+- **Reset graph position**: this button will reset the graph to its initial position, which is intended to display most of the nodes in a single image
+- **Toggle landmark labels**: toggle the display of the landmark labels on/off
+- **Toggle cluster labels**: toggle the display of the cluster labels on/off
+- **Export selected clusters**: click this button to export the events in the selected clusters in a separate FCS file. For this to work, the original RData files corresponding to the clustered files in use must be located in the working directory.
+- **Plot selected clusters**: plot the selected clusters, using the plot type specified in the **Plot type** dropdown menu.
+- **Pool cluster data**: for plotting, pool all the data from the selected clusters. If the option is not selected, each cluster will be plotted individually as a separate boxplot, or density plot. Selecting this option will pool all the clusters data together for plotting.
+- **Markers to plot in cluster view**: one of the most useful ways to inspect a cluster is to plot the distribution of expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. Using this box you can select the markers you want to inspect. To generate the actual plot simply click on a cluster node. A plot of the markers distributions will then appear in the lower half of the window. The figure will contains multiple subplots, one for each marker. Each subplot consists of a distribution of expression values for the cells in the cluster and the cells in all the landmark nodes the cluster is connected to. The different distribution can be distinguished by line color, with a legend to the right of each plot.
 
 
 
