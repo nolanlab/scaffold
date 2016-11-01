@@ -93,6 +93,17 @@ Switch to the "Map exploration" tab by using the top navigation bar. This is a r
 
 - **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
 - **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
+
+You can interact with the graph using the mouse as follows:
+
+- Scrolling: zoom in/out. 
+- Left click + drag: panning
+- Click on a node: select the node
+- Click on a node + Shift key: add to the current selection
+- Left click + drag + Alt key: select all nodes inside a rectangle
+
+The table to the right of the graph shows statistics about either the entire graph, or the currently selected nodes. In the former case, the table shows statistics related to the number of cells for which each landmark in the *Landmark* column is the closest landmark. Conversely,  when one or more nodes are selected, the table shows statistics related to the individual clusters.
+
 - **Nodes color**: use this dataset to color the nodes according to the expression of a specific marker, or with "Default" colors (unsupervised clusters:Blue, landmark populations:Red).
 - **Color scaling**: select whether you want the color scale of the nodes to be calculated globally for the whole dataset, or locally for the currently visualized graph.
 - **Nodes size**: select whether you want the size of the nodes to be proportional to the number of cells in each cluster. Presently the size scale is calculated across the entire dataset.
@@ -103,9 +114,13 @@ Switch to the "Map exploration" tab by using the top navigation bar. This is a r
 - **Toggle landmark labels**: toggle the display of the landmark labels on/off
 - **Toggle cluster labels**: toggle the display of the cluster labels on/off
 - **Export selected clusters**: click this button to export the events in the selected clusters in a separate FCS file. For this to work, the original RData files corresponding to the clustered files in use must be located in the working directory.
-- **Plot selected clusters**: plot the selected clusters, using the plot type specified in the **Plot type** dropdown menu.
+
+One of the most useful ways to inspect a cluster is to plot the expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. The plot generated with the options below will therefore contain all the selected clusters, and all the landmarks these clusters are connected to.
+
+- **Plot selected clusters**: plot the selected clusters, using the plot type specified in the **Plot type** dropdown menu. The plots appear at the very bottom of the page.
 - **Pool cluster data**: for plotting, pool all the data from the selected clusters. If the option is not selected, each cluster will be plotted individually as a separate boxplot, or density plot. Selecting this option will pool all the clusters data together for plotting.
-- **Markers to plot in cluster view**: one of the most useful ways to inspect a cluster is to plot the distribution of expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. Using this box you can select the markers you want to inspect. To generate the actual plot simply click on a cluster node. A plot of the markers distributions will then appear in the lower half of the window. The figure will contains multiple subplots, one for each marker. Each subplot consists of a distribution of expression values for the cells in the cluster and the cells in all the landmark nodes the cluster is connected to. The different distribution can be distinguished by line color, with a legend to the right of each plot.
+- **Plot type**: the type of plot to display. Either a boxplot, a density plot, or a scatteplot (biaxial). For the latter plot type only the first two selected markers (see below) will be used, corresponding to the x and y axes.
+- **Markers to plot in cluster view**: Select which markers you want to display in the plot.
 
 ## Map data onto an existing reference
 
