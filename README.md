@@ -55,6 +55,8 @@ scaffold.run()
 ```
 to stop SCAFFoLD simply hit the "ESC" key in your R session.
 
+*Note*: the latest version of devtools seems to be occasionally having problems installing dependencies on windows. If the installation of SCAFFoLD fails for a missing package, please install the offending packages manually, using the R *install.packages* function
+
 # Usage
 
 When you launch the GUI you will be prompted to select a file. You can select any file in what you want to be your working directory and this will set the working directory for the remainder of the session. SCAFFoLD will only look at files in your working directory, so everything you need must be there. Also if you add files to this directory you will need to restart the interface in order to see them in the dropdown menus. The first step of the analysis is to cluster the FCS files.
@@ -82,7 +84,7 @@ After you have specified all the parameters you can click on the "Start analysis
 
 ## Explore a SCAFFoLD map
 
-Switch to the "Map exploration" tab by using the top navigation bar. This is a rundown of what the operation of the differnent controls:
+Switch to the "Map exploration" tab by using the top navigation bar. This is a rundown of the operation of the different controls:
 
 1. **Choose a dataset**: use this drop-down to select a .scaffold file located in your current working directory
 2. **Choose a graph**: the result of a single SCAFFoLD analysis typically contain multiple maps, one for each input dataset. This dropdown allows you to select the map you want to visualize.
@@ -90,10 +92,13 @@ Switch to the "Map exploration" tab by using the top navigation bar. This is a r
 4. **Color scaling**: select whether you want the color scale of the nodes to be calculated globally for the whole dataset, or locally for the currently visualized graph.
 5. **Nodes size**: select whether you want the size of the nodes to be proportional to the number of cells in each cluster. Presently the size scale is calculated across the entire dataset.
 6. **Display edges**: select whether you want to display all the edges in the graph, or only the highest scoring one for each cluster. Even you if you are displaying all the edges you can visualize the highest scoring one for an individual cluster by hovering the mouse over the node.
-7. **Reset graph**: this button will reset the graph to its initial position, which is intended to display most of the nodes in a single image
-8. **Toggle landmark labels**: toggle the display of the landmark labels on/off
-9. **Toggle cluster labels**: toggle the display of the cluster labels on/off
-10. **Markers to plot in cluster view**: one of the most useful ways to inspect a cluster is to plot the distribution of expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. Using this box you can select the markers you want to inspect. To generate the actual plot simply click on a cluster node. A plot of the markers distributions will then appear in the lower half of the window. The figure will contains multiple subplots, one for each marker. Each subplot consists of a distribution of expression values for the cells in the cluster and the cells in all the landmark nodes the cluster is connected to. The different distribution can be distinguished by line color, with a legend to the right of each plot.
+7. **Minimum / Maximum / Landmark node size**: the minimum and maximum size for the cluster (blue) and landmark (red) nodes
+8. **Display edges**: whether to display all the edges, only the highest scoring ones (i.e. for each cluster node, only the highest scoring connection), only the ones between the clusters themselves, or only the ones between clusters and landmarks.
+9. **Reset graph position**: this button will reset the graph to its initial position, which is intended to display most of the nodes in a single image
+10. **Toggle landmark labels**: toggle the display of the landmark labels on/off
+11. **Toggle cluster labels**: toggle the display of the cluster labels on/off
+12. **Export selected clusters**: click this button to export the events in the selected clusters in a separate FCS file. For this to work, the original RData files corresponding to the clustered files in use must be located in the working directory.
+12. **Markers to plot in cluster view**: one of the most useful ways to inspect a cluster is to plot the distribution of expression values for the cells that comprise the cluster as compared to the cells that define the landmark nodes the cluster is connected to. This can help you understand what is similar and what is different between a cluster and a landmark population. Using this box you can select the markers you want to inspect. To generate the actual plot simply click on a cluster node. A plot of the markers distributions will then appear in the lower half of the window. The figure will contains multiple subplots, one for each marker. Each subplot consists of a distribution of expression values for the cells in the cluster and the cells in all the landmark nodes the cluster is connected to. The different distribution can be distinguished by line color, with a legend to the right of each plot.
 
 
 
