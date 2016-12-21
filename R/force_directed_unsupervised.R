@@ -1,4 +1,5 @@
-force_directed_unsupervised <- function(working.dir, input.files, col.names, filtering.threshold)
+
+force_directed_unsupervised <- function(working.dir, input.files, col.names, filtering.threshold, output.name, output.type = "legacy")
 {
     tab <- NULL
     ret <- list(graphs = list())
@@ -27,12 +28,23 @@ force_directed_unsupervised <- function(working.dir, input.files, col.names, fil
     G <- complete.forceatlas2(G, first.iter = 50000, overlap.iter = 1, overlap_method = NULL, ew_influence = 5)
     print("ForceAtlas2 done")
     
-    
-    out.name <- file.path(working.dir, sprintf("%s.unsupervised.graphml", input.files[[1]]))
-    write.graph(G, out.name, format = "graphml")
-    ret$graphs <- c(ret$graphs, setNames(list(G), input.files[[1]]))
-    my_save(ret,  file.path(working.dir, sprintf("%s.unsupervised.scaffold", input.files[[1]])))
-    
+    if(output.type == "legacy")
+    {
+        out.name <- file.path(working.dir, sprintf("%s.unsupervised.graphml", output.name))
+        write.graph(G, out.name, format = "graphml")
+        ret$graphs <- c(ret$graphs, setNames(list(G), input.files[[1]]))
+        my_save(ret,  file.path(working.dir, sprintf("%s.unsupervised.scaffold", output.name)))
+    }
+    else if(output.type == "directory")
+    {
+        full.path <- file.path(working.dir, "unsupervised_graphs")
+        
+        dir.create(full.path, recursive = T)
+        out.name <- file.path(full.path, sprintf("%s.unsupervised.graphml", output.name))
+        write.graph(G, out.name, format = "graphml" )
+        G.json <- scaffold:::graph_to_json(G)
+        cat(G.json, file = gsub("graphml", "json", out.name))
+    }
     
     return(out.name)
 }

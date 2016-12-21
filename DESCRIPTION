@@ -18,6 +18,7 @@ Imports:
     shinyjs,
     scales,
     grDevices,
-    parallel
+    parallel,
+    jsonlite
 LazyData: true
 RoxygenNote: 5.0.1

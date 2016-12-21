@@ -188,13 +188,12 @@ write_clustering_output <- function(base.name, tab.medians, clustered.data, outp
     }
     else if(output.type == "directory")
     {
-        clusters.dir <- "clusters"
         clustered.data.dir <- "clustered.data"
         txt.file.name <- paste(base.name, ".clustered.txt", sep = "")
-        full.path <- file.path(output.dir, clusters.dir, clustered.data.dir, txt.file.name)
+        full.path <- file.path(output.dir, clustered.data.dir, txt.file.name)
         dir.create(full.path, recursive = T)
         
-        write.table(tab.medians, file.path(output.dir, clusters.dir, txt.file.name, sep = ""), 
+        write.table(tab.medians, file.path(output.dir, txt.file.name, sep = ""), 
                     row.names = F, sep = "\t", quote = F)
         ddply(clustered.data, ~cellType, function(x) {
             saveRDS(x, file = file.path(full.path, sprintf("cluster_%d.RData", x$cellType[1])))
@@ -208,7 +207,7 @@ cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num
     files.list <- list.files(path = wd, pattern = "*.fcs$")
     output.dir <- NULL
     if(output_type == "directory")
-        output.dir <- sprintf("%s.scaffold", gsub(".fcs$", "", files.list[[1]]))
+        output.dir <- sprintf("%s.clustering_run", gsub(".fcs$", "", files.list[[1]]))
     
     parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
              process_file, wd = wd, col.names = col.names, num_clusters = num_clusters, 
@@ -218,19 +217,23 @@ cluster_fcs_files_in_dir <- function(wd, num.cores, col.names, num_clusters, num
 
 #' @export
 cluster_fcs_files_groups <- function(wd, files.list, num.cores, col.names, num_clusters, num_samples, 
-                                     asinh.cofactor, downsample.to, output_type = "legacy")
+                                     asinh.cofactor, downsample.to, output_type = "legacy", output_dir = NULL)
 {
     #lapply(files.list,
     #                   process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
     #                   asinh.cofactor = asinh.cofactor, downsample.to = downsample.to)
     
-    output.dir <- NULL
+ 
     if(output_type == "directory")
-        output.dir <- sprintf("%s.scaffold", gsub(".fcs$", "", names(files.list)[1]))
-    
+    {
+        if(is.null(output_dir))
+            output_dir <- sprintf("%s.clustering_run", gsub(".fcs$", "", names(files.list)[1]))
+        else
+            output_dir <- sprintf("%s.clustering_run", output_dir)
+    }
     parallel::mclapply(files.list, mc.cores = num.cores, mc.preschedule = FALSE,
                        process_files_groups, wd = wd, col.names = col.names, num_clusters = num_clusters, num_samples = num_samples, 
-                       asinh.cofactor = asinh.cofactor, downsample.to = downsample.to, output_type = output_type, output.dir = output.dir)
+                       asinh.cofactor = asinh.cofactor, downsample.to = downsample.to, output_type = output_type, output.dir = output_dir)
     
     return(files.list)
 }

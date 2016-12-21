@@ -102,6 +102,39 @@ export_clusters <- function(working.dir, sel.graph, sel.nodes)
     write.FCS(f, outname)
 }
 
+
+graph_to_json <- function(G) {
+    edges <- data.frame(get.edgelist(G, names = F) - 1)
+    colnames(edges) <- c("source", "target")
+    svg.width <- 1200
+    svg.height <- 800
+    
+    x <- V(G)$x
+    y <- V(G)$y
+    
+    y <- -1 * y
+    x <- x + abs(min(x))
+    y <- y + abs(min(y))
+    num.landmarks <- sum(V(G)$type == 1)
+    trans <- get_graph_centering_transform(x, y, svg.width, svg.height)
+    
+    x <- (x / trans$scaling) - trans$offset.x
+    y <- (y / trans$scaling) - trans$offset.y
+    
+    vertex.size <- 10
+    edges <- cbind(edges, x1 = x[edges[, "source"] + 1], x2 = x[edges[, "target"] + 1])
+    edges <- cbind(edges, y1 = y[edges[, "source"] + 1], y2 = y[edges[, "target"] + 1])
+    edges <- cbind(edges, id = 1:nrow(edges))
+
+    nodes <- igraph::get.data.frame(G, what = "vertices")
+    nodes$x <- x
+    nodes$y <- y
+    nodes$size <- vertex.size / trans$scaling
+
+    ret <- list(nodes = nodes, edges = edges)
+    return(as.character(jsonlite::toJSON(ret)))
+}
+
 get_graph <- function(sc.data, sel.graph, node.size.attr, min.node.size, max.node.size, landmark.node.size)
 {
     G <- sc.data$graphs[[sel.graph]]
@@ -232,9 +265,9 @@ get_number_of_cells_per_landmark <- function(sc.data, sel.graph)
     return(dd)
 }
 
-get_fcs_col_names <- function(working.directory, f.name)
+get_fcs_col_names <- function(f.path)
 {
-    fcs.file <- read.FCS(paste(working.directory, f.name, sep = "/"))
+    fcs.file <- read.FCS(f.path)
     ret <- as.vector(pData(parameters(fcs.file))$desc)
     
     if(any(is.na(ret)))

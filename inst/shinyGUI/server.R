@@ -502,7 +502,7 @@ shinyServer(function(input, output, session)
     observe({
         if(!is.null(input$clusteringui_file_for_markers) && grepl("*.fcs$", input$clusteringui_file_for_markers))
         {
-            v <- scaffold:::get_fcs_col_names(working.directory, input$clusteringui_file_for_markers)
+            v <- scaffold:::get_fcs_col_names(file.path(working.directory, input$clusteringui_file_for_markers))
             updateSelectInput(session, "clusteringui_markers", choices = v)
         }
     })
