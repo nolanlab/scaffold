@@ -2,4 +2,4 @@ src/*.o
 src/*.dll
 .Rbuildignore
 .Rhistory
-.Rproj.user/
+.Rproj.user

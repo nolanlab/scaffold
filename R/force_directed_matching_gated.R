@@ -67,7 +67,7 @@ downsample_by <- function(tab, col.name, size)
 
 load_attractors_from_gated_data <- function(dir, asinh.cofactor)
 {
-  files <- list.files(dir, ".fcs")
+    files <- list.files(dir, ".fcs")
 	res <- NULL
 	for(f in files)
 	{
@@ -81,10 +81,10 @@ load_attractors_from_gated_data <- function(dir, asinh.cofactor)
             colnames(tab) <- pData(parameters(fcs))$name
             
        	if(any(is.na(colnames(tab))))
-	{
-		w <- is.na(colnames(tab))
-		colnames(tab)[w] <- pData(parameters(fcs))$name[w]
-	}
+        {
+            w <- is.na(colnames(tab))
+            colnames(tab)[w] <- pData(parameters(fcs))$name[w]
+        }
 
         tab <- as.matrix(tab)
         tab[tab < 0] <- 0
@@ -94,15 +94,15 @@ load_attractors_from_gated_data <- function(dir, asinh.cofactor)
 		res <- rbind(res, tab)
 	}
     
-  downsampled.data <- downsample_by(res, "population", 1000)
-  names(downsampled.data) <- gsub("population", "cellType", names(downsampled.data))
+    downsampled.data <- downsample_by(res, "population", 1000)
+    names(downsampled.data) <- gsub("population", "cellType", names(downsampled.data))
     
     #Change cellType to be numbers
 	k <- unique(res$population)
 	k <- data.frame(population = k, cellType = seq_along(k), stringsAsFactors = F)
 	res <- merge(res, k)
 	res <- res[, grep("population", names(res), invert = T)]
-  res <- ddply(res, ~cellType, colwise(median))
+    res <- ddply(res, ~cellType, colwise(median))
 	return(list(downsampled.data = downsampled.data, tab.attractors = res, cellType_key = k))
 }
 
