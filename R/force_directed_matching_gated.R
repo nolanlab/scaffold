@@ -18,7 +18,7 @@ my_load <- function(f_name)
 }
 
 
-convert_fcs <- function(f, asinh.cofactor)
+convert_fcs <- function(f, asinh.cofactor, transform.data = T)
 {
     comp <- grep("SPILL", names(description(f)), value = T)
     if(length(comp) > 0)
@@ -37,7 +37,8 @@ convert_fcs <- function(f, asinh.cofactor)
     }
 	tab <- exprs(f)
     m <- as.matrix(tab)
-	m <- asinh(m / asinh.cofactor)
+    if(transform.data)
+	    m <- asinh(m / asinh.cofactor)
 	col.names <- colnames(m)
 	tab <- data.frame(m)
 	names(tab) <- col.names
@@ -65,15 +66,16 @@ downsample_by <- function(tab, col.name, size)
 }
 
 
-load_attractors_from_gated_data <- function(dir, asinh.cofactor)
+#... additional named arguments for read.FCS
+load_attractors_from_gated_data <- function(dir, asinh.cofactor, transform.data = T, ...)
 {
     files <- list.files(dir, ".fcs")
 	res <- NULL
 	for(f in files)
 	{
         population <- tail(strsplit(f, "_")[[1]], n = 1)
-		fcs <- read.FCS(paste(dir, f, sep = "/"))
-		tab <- convert_fcs(fcs, asinh.cofactor)
+		fcs <- read.FCS(paste(dir, f, sep = "/"), ...)
+		tab <- convert_fcs(fcs, asinh.cofactor, transform.data)
         
         if(!all(pData(parameters(fcs))$desc == " "))
             colnames(tab) <- pData(parameters(fcs))$desc
@@ -96,7 +98,7 @@ load_attractors_from_gated_data <- function(dir, asinh.cofactor)
     
     downsampled.data <- downsample_by(res, "population", 1000)
     names(downsampled.data) <- gsub("population", "cellType", names(downsampled.data))
-    
+
     #Change cellType to be numbers
 	k <- unique(res$population)
 	k <- data.frame(population = k, cellType = seq_along(k), stringsAsFactors = F)
