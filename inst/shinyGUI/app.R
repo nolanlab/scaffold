@@ -24,6 +24,7 @@ server <- function(input, output, session) {
     source(file.path(app.dir, "server", "tab_clustering.R"), local = T)$value
     source(file.path(app.dir, "server", "tab_analysis.R"), local = T)$value
     source(file.path(app.dir, "server", "tab_graph.R"), local = T)$value
+    source(file.path(app.dir, "server", "tab_citrus.R"), local = T)$value
 
     output$graphUI <- render_graph_ui(working.directory, input, output, session)
     output$analysisUI <- render_analysis_ui(working.directory, input, output, session)

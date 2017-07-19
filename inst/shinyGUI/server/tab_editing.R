@@ -1,6 +1,3 @@
-print("Here")
-print(working.directory)
-
 render_editing_ui <- function(working.directory, ...) {renderUI({
     fluidPage(
         fluidRow(

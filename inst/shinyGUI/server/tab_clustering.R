@@ -27,7 +27,8 @@ render_clustering_ui <- function(working.directory, ...){renderUI({
             column(6,
                    selectInput("clusteringui_files_list", label = "File list", choices = c(list.files(path = working.directory, pattern = "*.fcs$")),
                                selectize = F, multiple = T, width = "100%"),
-                   actionButton("clusteringui_add_clustering_group", "Add clustering group")
+                   actionButton("clusteringui_add_clustering_group", "Add files as group"),
+                   actionButton("clusteringui_add_clustering_individual", "Add individual files")
             ),
             column(6,
                    uiOutput("clusteringui_clustering_groups_table")
@@ -92,6 +93,14 @@ observeEvent(input$clusteringui_add_clustering_group, {
                                                         setNames(list(files_list), files_list[1])
     )
     print(clusteringui_reactive_values$clustering_groups)  
+})
+
+observeEvent(input$clusteringui_add_clustering_individual, {
+    files_list <- isolate({input$clusteringui_files_list})
+    clusteringui_reactive_values$clustering_groups <- c(clusteringui_reactive_values$clustering_groups,
+                                                        setNames(as.list(files_list), files_list)
+    )
+    
 })
 
 
