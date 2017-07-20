@@ -23,12 +23,17 @@ render_citrus_ui <- function(working.directory, ...) {renderUI({
                 verbatimTextOutput("citrusui_selected_metadata_file")
             ),
             column(6,
+                selectInput("citrusui_selected_model_type", "Select the type of model", choices = c("pamr", "SAM"), width = "100%"),
                 p("Select which features to use"),
                 checkboxInput("citrusui_abundance_features", "Abundance features"),
                 checkboxInput("citrusui_expression_features", "Marker expression"),
                 conditionalPanel(
                     condition = "input.citrusui_expression_features == true",
                     selectInput("citrusui_selected_feature_markers", "Select markers", choices = c(""), multiple = T, width = "100%")
+                ),
+                conditionalPanel(
+                    condition = "output.citrusui_selected_metadata_file != ' '",
+                    selectInput("citrusui_selected_endpoint", "Select endpoint", choices = c(""), multiple = F, width = "100%")
                 )
             )
         ),
@@ -76,6 +81,18 @@ observeEvent(input$citrusui_select_metadata_file, {
         citrusui.reactive.values$metadata.tab <- read.table(citrusui.reactive.values$metadata.file.name,
                                                             header = T, sep = "\t", check.names = F, stringsAsFactors = F, quote = "")
     })
+})
+
+
+
+observe({
+    if(!is.null(citrusui.reactive.values$metadata.tab)) {
+        isolate({
+            col.names <- names(citrusui.reactive.values$metadata.tab)
+            col.names <- grep("file|condition", col.names, invert = T, value = T)
+            updateSelectInput(session, "citrusui_selected_endpoint", choices = col.names)
+        })
+    }
 })
 
 observe({
