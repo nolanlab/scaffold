@@ -20,7 +20,8 @@ render_citrus_ui <- function(working.directory, ...) {renderUI({
                         actionButton("citrusui_select_metadata_file", "Select metadata file")
                     )
                 ),
-                verbatimTextOutput("citrusui_selected_metadata_file")
+                verbatimTextOutput("citrusui_selected_metadata_file"),
+                actionButton("citrusui_run_analysis", "Run analysis")
             ),
             column(6,
                 selectInput("citrusui_selected_model_type", "Select the type of model", choices = c("pamr", "SAM"), width = "100%"),
@@ -83,6 +84,27 @@ observeEvent(input$citrusui_select_metadata_file, {
     })
 })
 
+
+
+observeEvent(input$citrusui_run_analysis, {
+    isolate({
+        print("FIXME!!")
+        features.type <- "abundance"
+        endpoint <- citrusui.reactive.values$metadata.tab[, input$citrusui_selected_endpoint]
+        showModal(modalDialog(
+            title = "Citrus report",
+            "Citrus analysis started, please wait..."
+        ))
+        
+        scaffold:::run_citrus(working.directory, citrusui.reactive.values$input.tab, 
+                features.type, endpoint, input$citrusui_selected_model_type, baseline = NULL)
+        
+        showModal(modalDialog(
+            title = "Citrus report",
+            "Citrus analysis completed"
+        ))
+    })
+})
 
 
 observe({
