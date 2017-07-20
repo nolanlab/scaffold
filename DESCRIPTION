@@ -19,6 +19,7 @@ Imports:
     scales,
     grDevices,
     parallel,
-    jsonlite
+    jsonlite,
+    DT
 LazyData: true
 RoxygenNote: 5.0.1

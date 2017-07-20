@@ -5,6 +5,7 @@ ui <- navbarPage("SCAFFoLD",
     tabPanel("Run clustering", uiOutput("clusteringUI")),
     tabPanel("Map dataset", uiOutput("mappingUI")),
     tabPanel("Unsupervised map", uiOutput("unsupervisedUI")),
+    tabPanel("Run Citrus", uiOutput("citrusUI")),
     tabPanel("Edit SCAFFoLD file", uiOutput("editingUI"))
 )
 
@@ -31,6 +32,7 @@ server <- function(input, output, session) {
     output$clusteringUI <- render_clustering_ui(working.directory, input, output, session)
     output$mappingUI <- render_mapping_ui(working.directory, input, output, session)
     output$editingUI <- render_editing_ui(working.directory, input, output, session)
+    output$citrusUI <- render_citrus_ui(working.directory, input, output, session)
 }
 
 shinyApp(ui = ui, server = server)

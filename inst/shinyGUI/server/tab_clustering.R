@@ -106,15 +106,15 @@ observeEvent(input$clusteringui_add_clustering_individual, {
 
 output$clusteringui_dialog <- renderText({
     if(!is.null(input$clusteringui_start) && input$clusteringui_start != 0)
-    isolate({
-        col.names <- input$clusteringui_markers
-        files.analyzed <- scaffold:::cluster_fcs_files_groups(working.directory, clusteringui_reactive_values$clustering_groups, input$clusteringui_num_cores, col.names, 
-                                input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor, input$clusteringui_downsample_to)
-        #files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, input$clusteringui_num_cores, col.names, 
-        #                        input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
-        ret <- sprintf("Clustering completed with markers %s\n", paste(input$clusteringui_markers, collapse = " "))
-        ret <- paste(ret, sprintf("Files analyzed:\n%s", paste(files.analyzed, collapse = "\n")), sep = "")
-        updateSelectInput(session, "analysisui_reference", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")))
-        return(ret)
-    })
+        isolate({
+            col.names <- input$clusteringui_markers
+            files.analyzed <- scaffold:::cluster_fcs_files_groups(working.directory, clusteringui_reactive_values$clustering_groups, input$clusteringui_num_cores, col.names, 
+                                    input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor, input$clusteringui_downsample_to)
+            #files.analyzed <- scaffold:::cluster_fcs_files_in_dir(working.directory, input$clusteringui_num_cores, col.names, 
+            #                        input$clusteringui_num_clusters, input$clusteringui_num_samples, input$clusteringui_asinh_cofactor)
+            ret <- sprintf("Clustering completed with markers %s\n", paste(input$clusteringui_markers, collapse = " "))
+            ret <- paste(ret, sprintf("Files analyzed:\n%s", paste(files.analyzed, collapse = "\n")), sep = "")
+            updateSelectInput(session, "analysisui_reference", choices = c("", list.files(path = working.directory, pattern = "*.clustered.txt$")))
+            return(ret)
+        })
 })
