@@ -56,21 +56,100 @@ transpose_feature_matrix <- function(m) {
     stopifnot(length(v) == 1)
     
     m <- t(m)
-    colnames(m) <- paste("cluster", 1:ncol(m), v)
+    colnames(m) <- paste("cluster", 1:ncol(m), v, sep = "_")
     row.names(m) <- sapply(s, "[", 2)
     
     return(m)
 }
 
-calculate_features <- function(input.tab, marker.names, baseline = NULL) {
-    col.names <- sapply(marker.names, paste, "@", sep = "")
+
+reshape_cluster_features <- function(input.tab, features) {
+    col.names <- sapply(features, paste, "@", sep = "")
     col.names <- paste(col.names, collapse = "|")
     col.names <- grep(col.names, names(input.tab), value = T)
     
     m <- as.matrix(input.tab[, col.names])
     
     
-    ret <- lapply(marker.names, function(s) {
+    ret <- lapply(features, function(s) {
+        temp <- m[, grep(s, colnames(m))]
+        temp[is.na(temp)] <- 0
+        
+        if(s == "popsize") {
+            temp <- t(temp)
+            temp <- temp / rowSums(temp)
+            temp <- t(temp)
+        }
+        
+        temp <- transpose_feature_matrix(temp)
+        temp[!is.finite(temp)] <- 0
+        
+        return(temp)
+        
+    })
+    ret <- do.call(cbind, ret)
+    return(ret)
+    
+}
+
+### Working code
+#tab <- read.table("Patient20_diseased_unstim.fcs.clustered.txt", header = T, sep = "\t", check.names = F,
+#                  stringsAsFactors = F)
+#metadata.tab <- read.table("test_metadata.txt", header = T, sep = "\t", check.names = F,
+#                           stringsAsFactors = F)
+
+#m <- reshape_cluster_features(tab, c("FunctionalMarker1", "FunctionalMarker2", "popsize"))
+
+
+#df <- melt(m, varnames = c("file", "variable"))
+
+#df <- merge(df, metadata.tab, by = "file")
+
+#feature_tab <- cast(df, variable + condition + day ~ sample)
+
+calculate_cluster_features <- function(tab, metadata.tab, features.names, predictors, endpoint.grouping) {
+    print("ADD CHECK FOR UNIQUENESS!!")
+    m <- reshape_cluster_features(tab, features.names)
+    browser()
+    
+    df <- reshape::melt(m, varnames = c("file", "variable"))
+    
+    df <- merge(df, metadata.tab, by = "file")
+    
+    formula.exp <- as.formula(sprintf("%s ~ %s", paste(predictors, collapse = "+"),
+                           paste(endpoint.grouping, collapse = "+")))
+    
+    ret <- cast(df, formula.exp)
+    return(ret)
+}
+
+merge_metadata_information <- function(input.tab, metadata.tab, features) {
+    col.names <- sapply(features, paste, "@", sep = "")
+    col.names <- paste(col.names, collapse = "|")
+    col.names <- grep(col.names, names(input.tab), value = T)
+    
+    m <- as.matrix(t(input.tab[, col.names]))
+    
+    col.names <- strsplit(col.names, "@")
+    var.name <- sapply(col.names, "[", 1)
+    file.name <- sapply(col.names, "[", 2)
+    
+    
+    df <- data.frame(var.name, file.name, m, check.names = F, stringsAsFactors = F)
+    
+    ret <- merge(metadata.tab, df, by.x = "file", by.y = "file.name")
+    
+    
+    
+}
+
+
+calculate_cluster_features_old <- function(input.tab, metadata.tab, features, baseline.condition = NULL) {
+    tab <- merge_metadata_information(input.tab, metadata.tab, features)
+    
+    
+    
+    ret <- lapply(features, function(s) {
         temp <- m[, grep(s, colnames(m))]
         temp[is.na(temp)] <- 0
         
@@ -96,17 +175,8 @@ calculate_features <- function(input.tab, marker.names, baseline = NULL) {
     
 }
 
-calculate_cluster_features <- function(input.tab, features.type = c("abundance", "expression"), baseline = NULL) {
-    features.type <- match.arg(features.type)
-    ret <- NULL
-    
-    if(features.type == "abundance") 
-        ret <- calculate_abundance_features(input.tab)
-    return(ret)
-}
 
-run_citrus <- function(working.directory, input.tab, 
-                       features.type = c("abundance", "expression"), endpoint, model.type, baseline = NULL) {
-    citrus.features <- calculate_cluster_features(input.tab, features.type, baseline)
+run_citrus <- function(working.directory, input.tab, features, endpoint, model.type, baseline = NULL) {
+    citrus.features <- calculate_cluster_features(input.tab, features, baseline)
     run_citrus_analysis(citrus.features, endpoint, working.directory, model.type)
 }

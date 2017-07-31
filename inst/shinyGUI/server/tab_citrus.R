@@ -24,18 +24,27 @@ render_citrus_ui <- function(working.directory, ...) {renderUI({
                 actionButton("citrusui_run_analysis", "Run analysis")
             ),
             column(6,
-                selectInput("citrusui_selected_model_type", "Select the type of model", choices = c("pamr", "SAM"), width = "100%"),
-                p("Select which features to use"),
-                checkboxInput("citrusui_abundance_features", "Abundance features"),
-                checkboxInput("citrusui_expression_features", "Marker expression"),
-                conditionalPanel(
-                    condition = "input.citrusui_expression_features == true",
-                    selectInput("citrusui_selected_feature_markers", "Select markers", choices = c(""), multiple = T, width = "100%")
+                inputPanel(
+                    h2("Model specification"),
+                    selectInput("citrusui_selected_endpoint", "Predict", choices = c(""), multiple = F, width = "100%"),
+                    selectInput("citrusui_endpoint_grouping", "For each", choices = c(""), multiple = T, width = "100%"),
+                    selectInput("citrusui_predictors", "Using", choices = c(""), multiple = T, width = "100%")
                 ),
-                conditionalPanel(
-                    condition = "output.citrusui_selected_metadata_file != ' '",
-                    selectInput("citrusui_selected_endpoint", "Select endpoint", choices = c(""), multiple = F, width = "100%")
+                selectInput("citrusui_selected_model_type", "Select the type of model", choices = c("pamr", "SAM"), width = "100%"),
+                selectInput("citrusui_selected_features", "Select features to use", choices = c(""), multiple = T, width = "100%"),
+                fluidRow(
+                    column(6,
+                        selectInput("citrusui_normalization_baseline", "Baseline for normalization", choices = c("No normalization"), width = "100%")
+                    ),
+                    column(6,
+                        conditionalPanel(
+                            condition = "input.citrusui_normalization_baseline != 'No normalization'",
+                            selectInput("citrusui_normalization_formula", "Normalization formula", choices = c("Difference", "Ratio"), width = "100%")
+                        )
+                    )
                 )
+                
+                
             )
         ),
         fluidRow(
@@ -89,15 +98,18 @@ observeEvent(input$citrusui_select_metadata_file, {
 observeEvent(input$citrusui_run_analysis, {
     isolate({
         print("FIXME!!")
-        features.type <- "abundance"
+    
         endpoint <- citrusui.reactive.values$metadata.tab[, input$citrusui_selected_endpoint]
         showModal(modalDialog(
             title = "Citrus report",
             "Citrus analysis started, please wait..."
         ))
         
-        scaffold:::run_citrus(working.directory, citrusui.reactive.values$input.tab, 
-                features.type, endpoint, input$citrusui_selected_model_type, baseline = NULL)
+        #scaffold:::run_citrus(working.directory, citrusui.reactive.values$input.tab, 
+        #        input$citrusui_selected_features, endpoint, input$citrusui_selected_model_type, baseline = NULL)
+        
+        scaffold:::calculate_cluster_features(citrusui.reactive.values$input.tab, citrusui.reactive.values$metadata.tab,
+                    input$citrusui_selected_features, input$citrusui_predictors, input$citrusui_endpoint_grouping)
         
         showModal(modalDialog(
             title = "Citrus report",
@@ -111,8 +123,10 @@ observe({
     if(!is.null(citrusui.reactive.values$metadata.tab)) {
         isolate({
             col.names <- names(citrusui.reactive.values$metadata.tab)
-            col.names <- grep("file|condition", col.names, invert = T, value = T)
+            col.names <- grep("file", col.names, invert = T, value = T)
             updateSelectInput(session, "citrusui_selected_endpoint", choices = col.names)
+            updateSelectInput(session, "citrusui_endpoint_grouping", choices = col.names)
+            updateSelectInput(session, "citrusui_predictors", choices = col.names)
         })
     }
 })
@@ -121,8 +135,12 @@ observe({
     if(!is.null(citrusui.reactive.values$input.tab)) {
         isolate({
             col.names <- names(citrusui.reactive.values$input.tab)
-            col.names <- grep("cellType|popsize|@", col.names, invert = T, value = T)
-            updateSelectInput(session, "citrusui_selected_feature_markers", choices = col.names)
+            samples <- strsplit(grep("@", col.names, value = T), "@")
+            samples <- sapply(samples, "[", 2)
+            col.names <- grep("cellType|@", col.names, invert = T, value = T)
+            
+            updateSelectInput(session, "citrusui_selected_features", choices = col.names)
+            updateSelectInput(session, "citrusui_normalization_baseline", choices = c("No normalization", samples))
         })
     }
 })
