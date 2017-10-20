@@ -108,18 +108,18 @@ reshape_cluster_features <- function(input.tab, features) {
 #feature_tab <- cast(df, variable + condition + day ~ sample)
 
 calculate_cluster_features <- function(tab, metadata.tab, features.names, predictors, endpoint.grouping) {
-    print("ADD CHECK FOR UNIQUENESS!!")
     m <- reshape_cluster_features(tab, features.names)
-    browser()
     
     df <- reshape::melt(m, varnames = c("file", "variable"))
     
     df <- merge(df, metadata.tab, by = "file")
     
-    formula.exp <- as.formula(sprintf("%s ~ %s", paste(predictors, collapse = "+"),
+    formula.exp <- as.formula(sprintf("%s ~ %s", paste(c("variable", predictors), collapse = "+"),
                            paste(endpoint.grouping, collapse = "+")))
     
-    ret <- cast(df, formula.exp)
+    ret <- reshape::cast(df, formula.exp, 
+            fun.aggregate = function(x) {stop("The combination of response grouping and predictors does not uniquely identify each file")})
+    print(ret[1:5,])
     return(ret)
 }
 
