@@ -15,10 +15,10 @@ Imports:
     plyr,
     reshape,
     shiny,
-    shinyjs,
     scales,
     grDevices,
     parallel,
-    jsonlite
+    jsonlite,
+    colourpicker
 LazyData: true
 RoxygenNote: 5.0.1

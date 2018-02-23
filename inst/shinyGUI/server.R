@@ -75,24 +75,24 @@ fluidPage(
             selectInput("graphui_color_number", "Number of colors", choices = c(2,3)),
             fluidRow(
                 column(6,
-                    shinyjs::colourInput("graphui_color_under", "Under:", value = "#FFFF00")
+                    colourpicker::colourInput("graphui_color_under", "Under:", value = "#FFFF00")
                 ),
                 column(6,
-                    shinyjs::colourInput("graphui_color_over", "Over:", value = "#0000FF")
+                    colourpicker::colourInput("graphui_color_over", "Over:", value = "#0000FF")
                 )
             ),
             fluidRow(
                 column(4,
-                    shinyjs::colourInput("graphui_color_min", "Min:", value = "#E7E7E7")
+                    colourpicker::colourInput("graphui_color_min", "Min:", value = "#E7E7E7")
                 ),
                 column(4,
                     conditionalPanel(
                         condition = "input.graphui_color_number == 3",
-                        shinyjs::colourInput("graphui_color_mid", "Mid:", value = "#E7E7E7")
+                        colourpicker::colourInput("graphui_color_mid", "Mid:", value = "#E7E7E7")
                     )
                 ),
                 column(4,
-                    shinyjs::colourInput("graphui_color_max", "Max:", value = "#E71601")
+                    colourpicker::colourInput("graphui_color_max", "Max:", value = "#E71601")
                 )
             ),
             conditionalPanel(

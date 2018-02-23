@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 layout_forceatlas2Cpp <- function(lay, F_att_orig, mass, nodes_size, edge_list, avg_displ, kgrav, iter, prevent_overlap, fixed, max_displ, stopping_tolerance, barnes_hut) {
-    invisible(.Call('scaffold_layout_forceatlas2Cpp', PACKAGE = 'scaffold', lay, F_att_orig, mass, nodes_size, edge_list, avg_displ, kgrav, iter, prevent_overlap, fixed, max_displ, stopping_tolerance, barnes_hut))
+    invisible(.Call('_scaffold_layout_forceatlas2Cpp', PACKAGE = 'scaffold', lay, F_att_orig, mass, nodes_size, edge_list, avg_displ, kgrav, iter, prevent_overlap, fixed, max_displ, stopping_tolerance, barnes_hut))
 }
 
