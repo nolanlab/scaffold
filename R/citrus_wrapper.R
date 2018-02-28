@@ -7,7 +7,7 @@ run_citrus_analysis <- function(citrus.features, endpoint, working.directory, mo
         
     }
     else
-        family <- "continuoous"
+        family <- "continuous"
 
     citrus.res <- citrus::citrus.endpointRegress(
         model.type,
@@ -93,10 +93,8 @@ reshape_cluster_features <- function(input.tab, features) {
 }
 
 ### Working code
-#tab <- read.table("Patient20_diseased_unstim.fcs.clustered.txt", header = T, sep = "\t", check.names = F,
-#                  stringsAsFactors = F)
-#metadata.tab <- read.table("test_metadata.txt", header = T, sep = "\t", check.names = F,
-#                           stringsAsFactors = F)
+#tab <- read.table("Patient20_diseased_unstim.fcs.clustered.txt", header = T, sep = "\t", check.names = F, stringsAsFactors = F)
+#metadata.tab <- read.table("test_metadata.txt", header = T, sep = "\t", check.names = F, stringsAsFactors = F)
 
 #m <- reshape_cluster_features(tab, c("FunctionalMarker1", "FunctionalMarker2", "popsize"))
 
@@ -107,6 +105,18 @@ reshape_cluster_features <- function(input.tab, features) {
 
 #feature_tab <- cast(df, variable + condition + day ~ sample)
 
+convert_to_citrus_featureset <- function(tab, endpoint.grouping) {
+    rnames <- do.call(paste, list(tab[, endpoint.grouping], sep = "_"))
+    cnames <- setdiff(colnames(tab), endpoint.grouping)
+    ret <- as.matrix(tab[, cnames])
+    row.names(ret) <- rnames
+    colnames(ret) <- cnames
+    
+    return(list(allFeatures = ret, nFolds = 1))
+    
+    return(ret)
+}
+
 calculate_cluster_features <- function(tab, metadata.tab, features.names, predictors, endpoint.grouping) {
     m <- reshape_cluster_features(tab, features.names)
     
@@ -114,12 +124,13 @@ calculate_cluster_features <- function(tab, metadata.tab, features.names, predic
     
     df <- merge(df, metadata.tab, by = "file")
     
-    formula.exp <- as.formula(sprintf("%s ~ %s", paste(c("variable", predictors), collapse = "+"),
-                           paste(endpoint.grouping, collapse = "+")))
+    formula.exp <- as.formula(sprintf("%s ~ %s", paste(endpoint.grouping, collapse = "+"), 
+                                      paste(c("variable", predictors), collapse = "+")))
     
-    ret <- reshape::cast(df, formula.exp, 
-            fun.aggregate = function(x) {stop("The combination of response grouping and predictors does not uniquely identify each file")})
-    print(ret[1:5,])
+    #Stop if the combination of response grouping and predictors does not uniquely identify each file
+    stopifnot(nrow(df) == nrow(unique(df[, c("variable", predictors, endpoint.grouping)])))
+    ret <- reshape::cast(df, formula.exp)
+    
     return(ret)
 }
 

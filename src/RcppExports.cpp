@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // layout_forceatlas2Cpp
 void layout_forceatlas2Cpp(NumericMatrix lay, NumericVector F_att_orig, NumericVector mass, NumericVector nodes_size, NumericMatrix edge_list, NumericVector avg_displ, double kgrav, unsigned int iter, bool prevent_overlap, LogicalVector fixed, NumericVector max_displ, float stopping_tolerance, bool barnes_hut);
-RcppExport SEXP scaffold_layout_forceatlas2Cpp(SEXP laySEXP, SEXP F_att_origSEXP, SEXP massSEXP, SEXP nodes_sizeSEXP, SEXP edge_listSEXP, SEXP avg_displSEXP, SEXP kgravSEXP, SEXP iterSEXP, SEXP prevent_overlapSEXP, SEXP fixedSEXP, SEXP max_displSEXP, SEXP stopping_toleranceSEXP, SEXP barnes_hutSEXP) {
+RcppExport SEXP _scaffold_layout_forceatlas2Cpp(SEXP laySEXP, SEXP F_att_origSEXP, SEXP massSEXP, SEXP nodes_sizeSEXP, SEXP edge_listSEXP, SEXP avg_displSEXP, SEXP kgravSEXP, SEXP iterSEXP, SEXP prevent_overlapSEXP, SEXP fixedSEXP, SEXP max_displSEXP, SEXP stopping_toleranceSEXP, SEXP barnes_hutSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type lay(laySEXP);
@@ -26,4 +26,14 @@ BEGIN_RCPP
     layout_forceatlas2Cpp(lay, F_att_orig, mass, nodes_size, edge_list, avg_displ, kgrav, iter, prevent_overlap, fixed, max_displ, stopping_tolerance, barnes_hut);
     return R_NilValue;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_scaffold_layout_forceatlas2Cpp", (DL_FUNC) &_scaffold_layout_forceatlas2Cpp, 13},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_scaffold(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }
