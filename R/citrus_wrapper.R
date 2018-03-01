@@ -134,57 +134,30 @@ calculate_cluster_features <- function(tab, metadata.tab, features.names, predic
     return(ret)
 }
 
-merge_metadata_information <- function(input.tab, metadata.tab, features) {
-    col.names <- sapply(features, paste, "@", sep = "")
-    col.names <- paste(col.names, collapse = "|")
-    col.names <- grep(col.names, names(input.tab), value = T)
-    
-    m <- as.matrix(t(input.tab[, col.names]))
-    
-    col.names <- strsplit(col.names, "@")
-    var.name <- sapply(col.names, "[", 1)
-    file.name <- sapply(col.names, "[", 2)
-    
-    
-    df <- data.frame(var.name, file.name, m, check.names = F, stringsAsFactors = F)
-    
-    ret <- merge(metadata.tab, df, by.x = "file", by.y = "file.name")
-    
-    
-    
-}
+#maybe the subject var should be the same as the endpoint.grouping above??
 
-
-calculate_cluster_features_old <- function(input.tab, metadata.tab, features, baseline.condition = NULL) {
-    tab <- merge_metadata_information(input.tab, metadata.tab, features)
+hierarchical_normalization <- function(tab, norm.template, subject.var) {
+    var.names <- names(norm.template)
+    var.values <- unlist(norm.template, use.names = F)
     
+    ret <- tab
     
+    for(i in 1:length(var.names)) {
+        variable.names <- c("variable", subject.var, var.names[var.names != var.names[i]])
+        message(paste(variable.names, collapse = " "))
+        mutate.s <- sprintf("value / value[%s == '%s']", var.names[i], var.values[i])
+        filter.s <- sprintf("%s != '%s'", var.names[i], var.values[i])
+        message(s)
+        ret <- dplyr::group_by_(ret, .dots = variable.names) dplyr::%>%
+            dplyr::mutate_(.dots = setNames(mutate.s, "value")) dplyr::%>%
+            dplyr::filter_(.dots = filter.s)
+        
+        print(ret)
+    }
     
-    ret <- lapply(features, function(s) {
-        temp <- m[, grep(s, colnames(m))]
-        temp[is.na(temp)] <- 0
-        
-        if(s == "popsize") {
-            temp <- t(temp)
-            temp <- temp / rowSums(temp)
-            temp <- t(temp)
-        }
-        
-        if(!is.null(baseline)) {
-            bl <- paste(s, baseline, sep = "@")
-            temp <- temp / temp[, bl]
-        }
-        
-        temp <- transpose_feature_matrix(temp)
-        temp[!is.finite(temp)] <- 0
-        
-        return(temp)
-        
-    })
-    ret <- do.call(cbind, ret)
     return(ret)
-    
 }
+
 
 
 run_citrus <- function(working.directory, input.tab, features, endpoint, model.type, baseline = NULL) {
