@@ -134,9 +134,51 @@ calculate_cluster_features <- function(tab, metadata.tab, features.names, predic
     return(ret)
 }
 
-#maybe the subject var should be the same as the endpoint.grouping above??
-
-hierarchical_normalization <- function(tab, norm.template, subject.var) {
+#' Normalize numeric data in multiple steps
+#' 
+#' This function normalizes numeric data in a table in multiple steps, based on groups defined by different combinations of categorical variables. The table
+#' is assumed to be in molten format (e.g. see \code{reshape::melt}), with a single value column. This function will then proceed to normalize the data
+#' based on the value identified by a categorical variable, then normalize the normalized data again by another value etc. (see below for Details)
+#' 
+#' For this function to work the inputs need to satisfy a number of conditions
+#' 
+#'   \itemize{
+#'     \item{The input table needs to be in molten format (i.e. see \code{reshape::melt}). There need to be \code{variable} and
+#'       \code{value} columns identifying the variables that will be normalized and their values}
+#'     \item{The remaining columns of the input table should all be categorical variables (either strings or factors), identifying different
+#'       subsets of rows}
+#'     \item{At each step of the normalization the table is grouped using the \code{variable}, \code{subject.var} and all the columns
+#'       in \code{names(norm.template)}. After this grouping, for every group, there can be only one row for the value of the current grouping
+#'       variable that has been selected as a basis for normalization. In other words the function will not allow you to normalize a vector of values
+#'       by another vector of values, it will only allow normalization of a vector by an individual number. This is done to prevent the result to depend
+#'       on the ordering of the table.}
+#'   }
+#' An example should help clarify the working of this function. Assume you have a dataset where different variables have been measured for multiple subjects,
+#' under different stimulation conditions, and at different timepoints. For each variable you want the data at each timepoint to be normalized by the value in 
+#' the "unstim" condition. Then you want this data to be further normalized by the value at the "baseline" timepoint. Assume \code{tab} is in molten
+#' format and has the following columns
+#'   \itemize{
+#'     \item{\code{variable}}: identifies the variable
+#'     \item{\code{value}}: the corresponding value of the variable
+#'     \item{\code{timepoint}}: categorical variable that identifies the timepoint
+#'     \item{\code{condition}}: categorical variable that identified the condition
+#'     \item{\code{subject}}: categorical variable that identifies data belonging to the same subject (all the normalization is done within subject)
+#'   }
+#' To achieve the result described above, you would invoke this function as \code{multistep_normalize(tab, list(condition = "unstim", timepoint = "baseline"), "subject")}.
+#' Note that the function would fail if you only specify a single variable (either \code{condition} or \code{timepoint}), because a single variable is not enough
+#' to identify a single value for normalization, since you have multiple conditions for each timepoint and viceversa. 
+#' 
+#' @param tab The input \code{data.frame} See the details for assumption about its structure
+#' @param norm.template A named list idenfying which categorical variables should be used to group data for normalization. The values in the list
+#'   represent the value of the corresponding variable that identify the rows that are used as reference for normalization at each step. The data will be normalized
+#'   in the same order specified by this list (i.e. data will be normalized according to the first variable, then again according to the second etc.)
+#' @param subject.var The name of the column that identifies different subjects in \code{tab}. All normalization operations are done within the subgroups
+#'   identified by this variable (i.e. data will never be normalized across subsets idenfied by different values of subject.var)
+#' 
+#' 
+#'
+#' @export 
+multistep_normalize <- function(tab, norm.template, subject.var) {
     var.names <- names(norm.template)
     var.values <- unlist(norm.template, use.names = F)
     
@@ -144,15 +186,23 @@ hierarchical_normalization <- function(tab, norm.template, subject.var) {
     
     for(i in 1:length(var.names)) {
         variable.names <- c("variable", subject.var, var.names[var.names != var.names[i]])
-        message(paste(variable.names, collapse = " "))
         mutate.s <- sprintf("value / value[%s == '%s']", var.names[i], var.values[i])
         filter.s <- sprintf("%s != '%s'", var.names[i], var.values[i])
-        message(s)
-        ret <- dplyr::group_by_(ret, .dots = variable.names) dplyr::%>%
-            dplyr::mutate_(.dots = setNames(mutate.s, "value")) dplyr::%>%
-            dplyr::filter_(.dots = filter.s)
         
-        print(ret)
+        # Check for uniqueness of normalization values
+        dplyr::group_by_(ret, .dots = variable.names) %>%
+            dplyr::do({
+                x <- .[[var.names[i]]]
+                if(length(x[x == var.values[i]]) != 1)
+                    stop("This combination of variables does not identify a single reference value for normalization")
+                .
+            })
+        
+ 
+        ret <- dplyr::group_by_(ret, .dots = variable.names) %>%
+                dplyr::mutate_(.dots = setNames(mutate.s, "value")) %>%
+                dplyr::filter_(.dots = filter.s)
+        
     }
     
     return(ret)

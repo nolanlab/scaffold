@@ -11,5 +11,6 @@
 #' @import igraph
 #' @import cluster
 #' @importFrom Rcpp sourceCpp
+#' @importFrom dplyr %>%
 #' @useDynLib scaffold 
 NULL

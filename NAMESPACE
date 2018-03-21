@@ -2,6 +2,7 @@
 
 export(cluster_fcs_files_groups)
 export(cluster_fcs_files_in_dir)
+export(multistep.normalize)
 export(scaffold.run)
 import(cluster)
 import(flowCore)
@@ -11,4 +12,5 @@ import(plyr)
 import(reshape)
 import(shiny)
 importFrom(Rcpp,sourceCpp)
+importFrom(dplyr,"%>%")
 useDynLib(scaffold)
