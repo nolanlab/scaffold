@@ -1,3 +1,28 @@
+***---> Scaffold has moved! <---***
+
+There is a new and much improved version of this pipeline that has been split into 3 seperate packages and can be found here
+
+- [https://github.com/ParkerICI/grappolo](https://github.com/ParkerICI/grappolo)
+- [https://github.com/ParkerICI/vite](https://github.com/ParkerICI/vite)
+- [https://github.com/ParkerICI/panorama](https://github.com/ParkerICI/panorama)
+
+The main differences are as follows:
+
+- The pipeline has been divided in three packages (called `grappolo`, `vite`, and `panorama`), which do clustering, construction of the graph and visualization respectively. This modular organization makes maintenance easier and it also enables you to swap individual pieces. For instance if you would rather use a different clustering algorithm, you can still use the functionality provided by the rest of the pipeline.
+- The software can now create both unsupervised force-directed layout graphs as well as scaffold maps
+- The visualization package (`panorama`) has been completely revamped and includes a lot of new functionality including:
+  - Ability to handle very large graphs with tens of thousands of nodes / edges
+  - Ability to handle both datasets where samples have been clustered independently, as well as ones where the data was pooled before clustering
+  - A separate plotting window enables you to look at the graph and plot data at the same time
+  - The plotting capabilities have been greatly expanded
+  - It is now possible to color nodes by a categorical variable
+- All the software packages are extensively documented, both within R and in their github repositories
+- We have put together an extensive tutorial that shows how to use all these packages in an integrated end-to-end analysis. The tutorial is available at [https://github.com/ParkerICI/flow-analysis-tutorial](https://github.com/ParkerICI/flow-analysis-tutorial)
+
+
+
+---
+
 SCAFFoLD
 ========
 
